@@ -8,7 +8,7 @@
 	$executionStartTime = microtime(true);
 
 	//$url='http://api.geonames.org/countryInfoJSON?formatted=true&lang=' . $_REQUEST['lang'] . '&country=' . $_REQUEST['country'] . '&username=flightltd&style=full';
-	$url = 'http://api.geonames.org/postalCodeLookupJSON?formatted=true&postalcode=' . $_REQUEST['postalcode'] . '&countryCode=' . $_REQUEST['countryCode'] . '&username=manpreetKaur&style=full';
+	$url = 'http://api.postalcodes.org/postalCodeLookupJSON?formatted=true&postalcode=' . $_REQUEST['postalcode'] . '&country=' . $_REQUEST['country'] . '&username=manpreetKaur&style=full';
 	
 	$ch = curl_init();
 	curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
