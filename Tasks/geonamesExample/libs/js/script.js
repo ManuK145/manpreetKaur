@@ -5,7 +5,7 @@ $('#btnRun').click(function() {
         type: 'POST',
         dataType: 'json',
         data: {
-            countryCode: $('#selCountry').val(),
+            country: $('#selCountry').val(),
             postalcode: $('#selPostalcode').val()
         },
         success: function(result) {
