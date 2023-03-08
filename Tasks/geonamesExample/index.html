@@ -1,119 +1,120 @@
+
 <!doctype html>
-
 <html lang="en">
-
 	<head>
-
 		<meta charset="utf-8">
-
-		<title>AJAX/PHP/CURL/JSON example</title>
+		<title>GeoNames Overview</title>
 		<meta name="description" content="AJAX/PHP/CURL/JSON example">
 		<meta name="author" content="Paddy Evans">
-
+		<link href="libs/css/style.css" rel="stylesheet">
 	</head>
-
 	<body>
-
-		<select id="selCountry">
-			<option value="GB">Great Britain</option>
-			<option value="AT">Austria</option>
-			<option value="DE">Germany</option>
-			<option value="IN">India</option>
-		</select>
-
-		<!-- <select id="selLanguage">
-			<option value="en">English</option>
-			<option value="fr">Francais</option>
-			<option value="de">Deutsche</option>
-		</select> 
-
-		<form id="selPostalcode">
-			Postalcode : <input type="text" name="Postalcode">
-			
-		 </form> -->
-
-		 <form action="/libs/js/script.js" id="selPostalcode">
-			<label for="Postalcode">Postalcode:</label><br>
-			<input type="text" id="Postalcode" name="Postalcode" ><br>
-		  </form>
-
-		<button id="btnRun">Run</button>
-
-		<br><br>
-
-		<div id="divResults">
-			
-			<table>
-
-				<!-- <tr>
-					<td align="right">
-						Continent: 
-					</td>
-					<td id="txtContinent">
-						
-					</td>
-
-				</tr>
-
+		<div id="mainTable">
+			<table width="100%" border="1" cellpadding="5" cellspacing="5">
 				<tr>
-					<td align="right">
-						Capital: 
-					</td>
-					<td id="txtCapital">
-						
-					</td>
-
+					<th>API Name</th>
+					<th>API Description</th>
+					<th></th>
 				</tr>
-
 				<tr>
-					<td align="right">
-						Languages: 
+					<td>Country Info</td>
+					<td>
+						<select id="selCountry">
+							<option value="GB">Great Britain</option>
+							<option value="FR">France</option>
+							<option value="DE">Germany</option>
+							<option value="US">USA</option>
+						</select>
+						<select id="selLanguage">
+							<option value="en">English</option>
+							<option value="fr">Francais</option>
+							<option value="de">Deutsche</option>
+						</select>
 					</td>
-					<td id="txtLanguages">
-						
-					</td>
-
+					<td><button id="btnCountryInfo" class="submitBtn">Submit</button></td>
 				</tr>
-
 				<tr>
-					<td align="right">
-						Population: 
+					<td>Hierarchy</td>
+					<td>
+						<select id="selHierarchyCountry">
+							<option value="PL">Poland</option>
+							<option value="ZW">Zimbabwe</option>
+							<option value="JP">Japan</option>
+							<option value="UK">London</option>
+						</select>
 					</td>
-					<td id="txtPopulation">
-						
-					</td>
-
+					<td><button id="btnHierarchy" class="submitBtn">Submit</button></td>
 				</tr>
-
 				<tr>
-					<td align="right">
-						Area (km<sup>2</sup>): 
+					<td>Siblings</td>
+					<td>
+						<select id="selSiblingsCountry">
+							<option value="JM">Jamaica</option>
+							<option value="AU">Australia</option>
+							<option value="NZ">New Zealand</option>
+							<option value="LK">Sri Lanka</option>
+						</select>
 					</td>
-					<td id="txtArea">
-						
-					</td>
-
-				</tr> -->
-
-				<tr>
-					<td align="right">
-						Placenames: 
-					</td>
-					<td id="Placenames">
-						
-					</td>
-
+					<td><button id="btnSiblings" class="submitBtn">Submit</button></td>
 				</tr>
-
-
-
+				<tr>
+					<td>Children</td>
+					<td>
+						<select id="selChildrenCountry">
+							<option value="IT">Italy</option>
+							<option value="ES">Spain</option>
+							<option value="HK">Hong Kong</option>
+							<option value="IN">India</option>
+						</select>
+					</td>
+					<td><button id="btnChildren" class="submitBtn">Submit</button></td>
+				</tr>
 			</table>
-
 		</div>
-
+		<br><br>
+		<div id="divCountryInfoResults">
+			<h3>Country Info Results</h3>
+			<table border="1">
+				<tr>
+					<td align="right"><b>Continent:</b></td>
+					<td id="txtContinent"></td>
+				</tr>
+				<tr>
+					<td align="right"><b>Capital:</b></td>
+					<td id="txtCapital"></td>
+				</tr>
+				<tr>
+					<td align="right"><b>Languages:</b></td>
+					<td id="txtLanguages"></td>
+				</tr>
+				<tr>
+					<td align="right"><b>Population:</b></td>
+					<td id="txtPopulation"></td>
+				</tr>
+				<tr>
+					<td align="right"><b>Area (km<sup>2</sup>):</b></td>
+					<td id="txtArea"></td>
+				</tr>
+			</table>
+		</div>
+		
+		<div id="divResultsHierarchy">
+			<h3>Hierarchy Results</h3>
+			<div id="hierarchyResults"></div>
+		</div>
+		
+		<div id="divResultsSiblings">
+			<h3>Siblings Results</h3>
+			<div id="siblingsResults"></div>
+		</div>
+		
+		<div id="divResultsChildren">
+			<h3>Children Results</h3>
+			<div id="childrenResults"></div>
+		</div>
+		
+		<div id="preloader"></div>
 		<script type="application/javascript" src="libs/js/jquery-2.2.3.min.js"></script>
 		<script type="application/javascript" src="libs/js/script.js"></script>
-
 	</body>
-
 </html>
