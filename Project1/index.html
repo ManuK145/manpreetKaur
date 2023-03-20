@@ -1,0 +1,299 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+	<meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+	<title>Gazetteer API</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />    
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@opencage/leaflet-opencage-geosearch/leaflet-opencage-geosearch.css" />
+	<link rel="stylesheet" href="css/style.css" />
+  </head>
+  <body>
+	<div id="header">
+		<h1>GAZETTEER</h1>
+		<select name="countries" id="countries" class="dropdownCountry">
+			<option value="">Select Country</option>
+			<option value="AF">Afghanistan</option>
+			<option value="AL">Albania</option>
+			<option value="DZ">Algeria</option>
+			<option value="AO">Angola</option>
+			<option value="AR">Argentina</option>
+			<option value="AM">Armenia</option>
+			<option value="AU">Australia</option>
+			<option value="AT">Austria</option>
+			<option value="AZ">Azerbaijan</option>
+			<option value="BS">Bahamas</option>
+			<option value="BD">Bangladesh</option>
+			<option value="BY">Belarus</option>
+			<option value="BE">Belgium</option>
+			<option value="BZ">Belize</option>
+			<option value="BJ">Benin</option>
+			<option value="BT">Bhutan</option>
+			<option value="BO">Bolivia</option>
+			<option value="BA">Bosnia and Herz.</option>
+			<option value="BW">Botswana</option>
+			<option value="BR">Brazil</option>
+			<option value="BN">Brunei</option>
+			<option value="BG">Bulgaria</option>
+			<option value="BF">Burkina Faso</option>
+			<option value="BI">Burundi</option>
+			<option value="KH">Cambodia</option>
+			<option value="CM">Cameroon</option>
+			<option value="CA">Canada</option>
+			<option value="CF">Central African Rep.</option>
+			<option value="TD">Chad</option>
+			<option value="CL">Chile</option>
+			<option value="CN">China</option>
+			<option value="CO">Colombia</option>
+			<option value="CG">Congo</option>
+			<option value="CR">Costa Rica</option>
+			<option value="HR">Croatia</option>
+			<option value="CU">Cuba</option>
+			<option value="CY">Cyprus</option>
+			<option value="CZ">Czech Rep.</option>
+			<option value="CI">Côte d'Ivoire</option>
+			<option value="CD">Dem. Rep. Congo</option>
+			<option value="KP">Dem. Rep. Korea</option>
+			<option value="DK">Denmark</option>
+			<option value="DJ">Djibouti</option>
+			<option value="DO">Dominican Rep.</option>
+			<option value="EC">Ecuador</option>
+			<option value="EG">Egypt</option>
+			<option value="SV">El Salvador</option>
+			<option value="GQ">Eq. Guinea</option>
+			<option value="ER">Eritrea</option>
+			<option value="EE">Estonia</option>
+			<option value="ET">Ethiopia</option>
+			<option value="FK">Falkland Islands</option>
+			<option value="FJ">Fiji</option>
+			<option value="FI">Finland</option>
+			<option value="FR">France</option>
+			<option value="GA">Gabon</option>
+			<option value="GM">Gambia</option>
+			<option value="GE">Georgia</option>
+			<option value="DE">Germany</option>
+			<option value="GH">Ghana</option>
+			<option value="GR">Greece</option>
+			<option value="GL">Greenland</option>
+			<option value="GT">Guatemala</option>
+			<option value="GN">Guinea</option>
+			<option value="GW">Guinea-Bissau</option>
+			<option value="GY">Guyana</option>
+			<option value="HT">Haiti</option>
+			<option value="HN">Honduras</option>
+			<option value="HU">Hungary</option>
+			<option value="IS">Iceland</option>
+			<option value="IN">India</option>
+			<option value="ID">Indonesia</option>
+			<option value="IR">Iran</option>
+			<option value="IQ">Iraq</option>
+			<option value="IE">Ireland</option>
+			<option value="IL">Israel</option>
+			<option value="IT">Italy</option>
+			<option value="JM">Jamaica</option>
+			<option value="JP">Japan</option>
+			<option value="JO">Jordan</option>
+			<option value="KZ">Kazakhstan</option>
+			<option value="KE">Kenya</option>
+			<option value="KR">Korea</option>
+			<option value="KW">Kuwait</option>
+			<option value="KG">Kyrgyzstan</option>
+			<option value="LA">Lao PDR</option>
+			<option value="LV">Latvia</option>
+			<option value="LB">Lebanon</option>
+			<option value="LS">Lesotho</option>
+			<option value="LR">Liberia</option>
+			<option value="LY">Libya</option>
+			<option value="LT">Lithuania</option>
+			<option value="LU">Luxembourg</option>
+			<option value="MK">Macedonia</option>
+			<option value="MG">Madagascar</option>
+			<option value="MW">Malawi</option>
+			<option value="MY">Malaysia</option>
+			<option value="ML">Mali</option>
+			<option value="MR">Mauritania</option>
+			<option value="MX">Mexico</option>
+			<option value="MD">Moldova</option>
+			<option value="MN">Mongolia</option>
+			<option value="ME">Montenegro</option>
+			<option value="MA">Morocco</option>
+			<option value="MZ">Mozambique</option>
+			<option value="MM">Myanmar</option>
+			<option value="NA">Namibia</option>
+			<option value="NP">Nepal</option>
+			<option value="NL">Netherlands</option>
+			<option value="NC">New Caledonia</option>
+			<option value="NZ">New Zealand</option>
+			<option value="NI">Nicaragua</option>
+			<option value="NE">Niger</option>
+			<option value="NG">Nigeria</option>
+			<option value="NO">Norway</option>
+			<option value="OM">Oman</option>
+			<option value="PK">Pakistan</option>
+			<option value="PS">Palestine</option>
+			<option value="PA">Panama</option>
+			<option value="PG">Papua New Guinea</option>
+			<option value="PY">Paraguay</option>
+			<option value="PE">Peru</option>
+			<option value="PH">Philippines</option>
+			<option value="PL">Poland</option>
+			<option value="PT">Portugal</option>
+			<option value="PR">Puerto Rico</option>
+			<option value="QA">Qatar</option>
+			<option value="RO">Romania</option>
+			<option value="RU">Russia</option>
+			<option value="RW">Rwanda</option>
+			<option value="SA">Saudi Arabia</option>
+			<option value="SN">Senegal</option>
+			<option value="RS">Serbia</option>
+			<option value="SL">Sierra Leone</option>
+			<option value="SK">Slovakia</option>
+			<option value="SI">Slovenia</option>
+			<option value="SB">Solomon Islands</option>
+			<option value="SO">Somalia</option>
+			<option value="ZA">South Africa</option>
+			<option value="SS">South Sudan</option>
+			<option value="ES">Spain</option>
+			<option value="LK">Sri Lanka</option>
+			<option value="SD">Sudan</option>
+			<option value="SR">Suriname</option>
+			<option value="SZ">Swaziland</option>
+			<option value="SE">Sweden</option>
+			<option value="CH">Switzerland</option>
+			<option value="SY">Syria</option>
+			<option value="TW">Taiwan</option>
+			<option value="TJ">Tajikistan</option>
+			<option value="TZ">Tanzania</option>
+			<option value="TH">Thailand</option>
+			<option value="TL">Timor-Leste</option>
+			<option value="TG">Togo</option>
+			<option value="TT">Trinidad and Tobago</option>
+			<option value="TN">Tunisia</option>
+			<option value="TR">Turkey</option>
+			<option value="TM">Turkmenistan</option>
+			<option value="UG">Uganda</option>
+			<option value="UA">Ukraine</option>
+			<option value="AE">United Arab Emirates</option>
+			<option value="GB">United Kingdom</option>
+			<option value="US">United States</option>
+			<option value="UY">Uruguay</option>
+			<option value="UZ">Uzbekistan</option>
+			<option value="VU">Vanuatu</option>
+			<option value="VE">Venezuela</option>
+			<option value="VN">Vietnam</option>
+			<option value="EH">Western Sahara</option>
+			<option value="YE">Yemen</option>
+			<option value="ZM">Zambia</option>
+			<option value="ZW">Zimbabwe</option>
+			</select>
+	</div>
+	<div id="info">
+		<h1>Country Info</h1>
+		<div>Country Name : <span id="countryName"></span></div>
+		<div>Country Flag : <span id="countryFlag" style="vertical-align: middle;"></span></div>
+		<div>Country Code : <span id="countryCode"></span></div>
+		<div>Population : <span id="population"></span></div>
+		<div>Capital : <span id="capital"></span></div>
+		<br/>
+		<h1>Currency Info</h1>
+		<div>Currency Name : <span id="currencyName"></span></div>
+		<div>Currency Code : <span id="currencyCode"></span></div>
+		<div>Currency Symbol : <span id="currencySymbol"></span></div>
+		<br/>
+		<h1>Weather Info</h1>
+		<div>Weather : <span id="weather"></span></div>
+		<div>Weather Icon : <span id="weatherIcon"></span></div>
+		<div>Temperature : <span id="temperature"></span></div>
+		<div>Wind Speed : <span id="windSpeed"></span></div>
+		<div>Humidity : <span id="humidity"></span></div>
+	</div>
+    <div id="map" style="width:100%; height:100vh;"></div>
+	<script src="https://code.jquery.com/jquery-3.6.4.js"></script>
+	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@opencage/geosearch-bundle"></script>
+	<script src="https://cdn.jsdelivr.net/npm/@opencage/leaflet-opencage-geosearch@0.0.17/leaflet-opencage-geosearch.js"></script>
+	<script type="text/javascript" src="countryBorders.js"></script>
+	<script>
+	let position;
+function getLocation() {
+  if (navigator.geolocation) {
+    navigator.geolocation.getCurrentPosition(showPosition);
+  } else { 
+    x.innerHTML = "Geolocation is not supported by this browser.";
+  }
+}
+function showPosition(position) {
+	displayMap(position.coords.latitude,position.coords.longitude);
+}
+getLocation();
+let marker;
+const countryBorders = 'countryBorders.geo.json';
+function displayMap(lat,lng)
+{
+	var map = L.map('map').setView([lat,lng],5);
+	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+		attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+	}).addTo(map);
+	marker = L.marker([lat,lng]).addTo(map);
+	map.addLayer(marker);
+	$("#countries").change(function() {
+		$.ajax({
+			url: "php/getCountryInfo.php",
+			type: 'GET',
+			dataType: 'json',
+			data: {
+				country: this.value
+			},
+			success: function(result) {
+				map.removeLayer(marker);
+				$('#countryName').html(result['data'][0]['countryName']);
+				$('#countryCode').html(result['data'][0]['countryCode']);
+				$('#population').html(result['data'][0]['population']);
+				$('#capital').html(result['data'][0]['capital']);
+				$('#continentName').html(result['data'][0]['continentName']);
+				$.ajax({
+					url: "php/getCountryData.php",
+					type: 'GET',
+					dataType: 'json',
+					data: {
+						countryCode: result['data'][0]['countryCode']
+					},
+					success: function(result1) {
+						$('#currencyName').html(result1['data'][0]['currencies'][result['data'][0]['currencyCode']]["name"]);
+						$('#currencyCode').html(result['data'][0]['currencyCode']);
+						$('#countryFlag').html(result1['data'][0]['flag']);
+						$('#currencySymbol').html(result1['data'][0]['currencies'][result['data'][0]['currencyCode']]["symbol"]);
+						map.setView([result1['data'][0]['latlng'][0],result1['data'][0]['latlng'][1]],5);
+						marker = L.marker([result1['data'][0]['latlng'][0],result1['data'][0]['latlng'][1]]).addTo(map);
+						map.addLayer(marker);
+						var requestOptions = {
+						  method: 'GET',
+						  redirect: 'follow',
+						  dataType: 'JSON'
+						};
+
+						fetch("https://api.openweathermap.org/data/2.5/weather?q="+result['data'][0]['capital']+"&appid=6946ff5a6e805ddac6b594f1daebd3dc&units=metric", requestOptions)
+						  .then(response => response.json())
+						  .then(function(result2){
+							$('#weather').html(result2["weather"][0]["main"]);							
+							$('#weatherIcon').html('<img src="https://openweathermap.org/img/wn/'+result2["weather"][0]["icon"]+'@2x.png" width="30" style="vertical-align: middle;" />');
+							$('#temperature').html(result2["main"]["temp"]+"&deg;");
+							$('#windSpeed').html(result2["wind"]["speed"]+"/km");
+							$('#humidity').html(result2["main"]["humidity"]+"%");
+						  })
+						  .catch(error => console.log('error', error));
+					},
+					error: function(jqXHR, textStatus, errorThrown) {
+						console.log(textStatus, errorThrown);
+					}
+				});
+			},
+			error: function(jqXHR, textStatus, errorThrown) {
+				console.log(textStatus, errorThrown);
+			}
+		});
+	});
+}
+	</script>
+  </body>
+</html>
