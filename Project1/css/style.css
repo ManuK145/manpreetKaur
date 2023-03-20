@@ -1,0 +1,66 @@
+*
+{
+	box-sizing: border-box;
+}
+body
+{
+	margin: 0;
+	padding: 0;
+	font-family: Helvetica, sans-serif;
+}
+#header
+{
+	position: fixed;
+	top: 0;
+	left: 0;
+	right: 0;
+	z-index: 2;
+	background: #212529;
+	padding: 10px 20px;
+}
+#header h1
+{
+	margin: 0;
+	display: inline-block;
+	color: #fff;
+	padding: 0 20px 0 0;
+	vertical-align: middle;
+}
+#map
+{
+	position: relative;
+	z-index: 1;
+	margin-top: 57px;
+}
+.dropdownCountry
+{
+	padding: 5px 8px;
+	font-size: 20px;
+	width: 250px;
+	vertical-align: middle;
+}
+#info
+{
+	position: fixed;
+	width: 25%;
+	height: 100%;
+	top: 57px;
+	right: 0;
+	bottom: 0;
+	padding: 10px 20px;
+	background-color: rgba(0,0,0,0.5);
+	z-index: 2;
+	color: #fff;
+	cursor: pointer;
+}
+#info h1
+{
+	margin: 0 0 10px 0;
+	text-align: center;
+	text-decoration: underline;
+}
+#info div
+{
+	font-size: 18px;
+	padding: 5px 0;
+}
