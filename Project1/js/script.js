@@ -10,7 +10,7 @@ function showPosition(position) {
 	displayMap(position.coords.latitude,position.coords.longitude);
 }
 getLocation();
-let marker, geojsonFeature;
+let marker, geojsonFeature, border=null;
 function displayMap(lat,lng)
 {
 	var map = L.map('map').setView([lat,lng],5);
@@ -54,8 +54,10 @@ function displayMap(lat,lng)
 							iso: result['data'][0]['countryCode']
 						},
 						success: function(result) {
-							geojsonFeature = result['data'];
-							L.geoJSON(geojsonFeature).addTo(map);
+							if(border)
+							border.clearLayers();
+							geojsonFeature=result['data'];
+							border= L.geoJSON(geojsonFeature).addTo(map);
 						},
 						error: function(jqXHR, textStatus, errorThrown) {
 							console.log(textStatus, errorThrown);
@@ -111,8 +113,10 @@ function displayMap(lat,lng)
 						iso: result['data'][0]['countryCode']
 					},
 					success: function(result) {
-						geojsonFeature = result['data'];
-						L.geoJSON(geojsonFeature).addTo(map);
+						if(border)
+						border.clearLayers();
+						geojsonFeature=result['data'];
+						border=L.geoJSON(geojsonFeature).addTo(map);
 					},
 					error: function(jqXHR, textStatus, errorThrown) {
 						console.log(textStatus, errorThrown);
