@@ -23,6 +23,7 @@ body
 	margin: 0;
 	display: inline-block;
 	color: #fff;
+	font-size: 30px;
 	padding: 0 20px 0 0;
 	vertical-align: middle;
 }
@@ -39,28 +40,24 @@ body
 	width: 250px;
 	vertical-align: middle;
 }
-#info
+.leaflet-bar button, .leaflet-control-zoom-in, .leaflet-control-zoom-out
 {
-	position: fixed;
-	width: 25%;
-	height: 100%;
-	top: 57px;
-	right: 0;
-	bottom: 0;
-	padding: 10px 20px;
-	background-color: rgba(0,0,0,0.5);
-	z-index: 2;
-	color: #fff;
-	cursor: pointer;
+	height: 50px !important;
+	width: 50px !important;
+	font-size: 2.6em;
+	padding: 8px;
 }
-#info h1
+.modal-body
 {
-	margin: 0 0 10px 0;
+	height: 70vh;
+	overflow-y: auto;
+}
+#flag
+{
+	display: block;
+	margin: 0 auto;
+}
+#txtWikiImg
+{
 	text-align: center;
-	text-decoration: underline;
-}
-#info div
-{
-	font-size: 18px;
-	padding: 5px 0;
 }
