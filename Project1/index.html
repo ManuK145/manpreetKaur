@@ -4,8 +4,11 @@
 	<meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 	<title>Gazetteer API</title>
-    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />    
+	<link rel="stylesheet" href="https://ernestoestrada.co.uk/gazetteer/assets/vendors/bootstrap-5.0.0-beta1-dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
+	<link rel="stylesheet" href="https://ernestoestrada.co.uk/gazetteer/assets/vendors/Leaflet.EasyButton-master/src/easy-button.css">   
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@opencage/leaflet-opencage-geosearch/leaflet-opencage-geosearch.css" />
+	<link href="https://site-assets.fontawesome.com/releases/v5.15.4/css/all.css" rel="stylesheet">
 	<link rel="stylesheet" href="css/style.css" />
   </head>
   <body>
@@ -13,26 +16,213 @@
 		<h1>GAZETTEER</h1>
 		<select name="countries" id="countries" class="dropdownCountry"></select>
 	</div>
-	<div id="info">
-		<h1>Country Info</h1>
-		<div>Country Name : <span id="countryName"></span></div>
-		<div>Country Flag : <span id="countryFlag" style="vertical-align: middle;"></span></div>
-		<div>Country Code : <span id="countryCode"></span></div>
-		<div>Population : <span id="population"></span></div>
-		<div>Capital : <span id="capital"></span></div>
-		<br/>
-		<h1>Currency Info</h1>
-		<div>Currency Name : <span id="currencyName"></span></div>
-		<div>Currency Code : <span id="currencyCode"></span></div>
-		<div>Currency Symbol : <span id="currencySymbol"></span></div>
-		<br/>
-		<h1>Weather Info</h1>
-		<div>Weather : <span id="weather"></span></div>
-		<div>Weather Icon : <span id="weatherIcon"></span></div>
-		<div>Temperature : <span id="temperature"></span></div>
-		<div>Wind Speed : <span id="windSpeed"></span></div>
-		<div>Humidity : <span id="humidity"></span></div>
-	</div>
+
+	<!--Wikipedia Modal -->
+	<div class="modal fade" id="wikiModal" tabindex="-1" aria-labelledby="wikiModalLabel" aria-hidden="true" style="display: none;">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h5 class="modal-title" id="wikiModalLabel"></h5>
+			</div>
+			<div class="modal-body">
+			  <table id="countryInfoTable" class="table">
+				<div id="txtWikiImg"></div>
+				<tbody>
+				  <tr>
+					<th scope="row">Population:</th>
+					<td id="txtPopulation"></td>
+				  </tr>
+				  <tr>
+					<th scope="row">Capital:</th>
+					<td id="txtCapital"></td>
+				  </tr>
+				  <tr>
+					<th scope="row">Language(s):</th>
+					<td id="txtLanguages"></td>
+				  </tr>
+				  <tr>
+					<th scope="row">ISO2 Country Code:</th>
+					<td id="txtIso2"></td>
+				  </tr>
+				  <tr>
+					<th scope="row">ISO3 Country Code:</th>
+					<td id="txtIso3"></td>
+				  </tr>
+				  <tr>
+					<th scope="row">Country Domain:</th>
+					<td id="txtDomain"></td>
+				  </tr>
+				</tbody>
+			  </table>
+			  <div id="txtWiki"></div>
+			</div>
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	  
+		<!--Weather Modal -->
+		  <div class="modal fade" id="weatherModal" tabindex="-1" aria-labelledby="weatherModalLabel" aria-hidden="true" style="display: none;">
+			<div class="modal-dialog">
+			  <div class="modal-content">
+				<div class="modal-header">
+				  <h1 class="modal-title txtCapitalName" id="weatherModalLabel"></h1>
+				</div>
+				<div class="modal-body short-modal">
+				  <table id="weatherTable" class="table">
+					<tbody>
+					  <tr>
+						<td id="CapitalWeatherIcon"></td>
+						<th scope="row">Current Temp:</th>
+						<td id="txtCapitalWeatherCurrent"></td>
+					  </tr>
+					  <tr>
+						<td id="CapitalWindIcon"></td>
+						<th class="text-sm-left" scope="row">Windspeed:</th>
+						<td id="txtCapitalWeatherWindspeed"></td>
+					  </tr>
+					  <tr>
+						<td id="CapitalHumidityIcon"></td>
+						<th scope="row">Humidity:</th>
+						<td id="txtCapitalWeatherHumidity"></td>
+					  </tr>
+					  <tr>
+						<td class="CapitalHiTempIcon"></td>
+						<th scope="row">High:</th>
+						<td id="txtCapitalWeatherMax"></td>
+					  </tr>
+					  <tr>
+						<td class="CapitalLoTempIcon"></td>
+						<th scope="row">Low:</th>
+						<td id="txtCapitalWeatherMin"></td>
+					  </tr>
+					  <tr>
+						<td class="CapitalHiTempIcon"></td>
+						<th scope="row">Tomorrow's High:</th>
+						<td id="txtCapitalTomorrowsWeatherMax"></td>
+					  </tr>
+					  <tr>
+						<td class="CapitalLoTempIcon"></td>
+						<th scope="row">Tomorrow's Low:</th>
+						<td id="txtCapitalTomorrowsWeatherMin"></td>
+					  </tr>
+					</tbody>
+				  </table>
+				</div>
+				  <div class="modal-footer">
+					<button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
+				  </div>
+			  </div>
+			</div>
+		  </div>
+		  
+		  <!-- exchange rates modal -->
+	  <div class="modal fade" id="currencyModal" tabindex="-1" aria-labelledby="currencyModalLabel" aria-hidden="true" style="display: none;">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h5 class="modal-title" id="currencyModalLabel">Currency Info</h5>          
+			</div>
+			<div class="modal-body short-modal">
+			  <table id="currencyTable" class="table">
+				<tbody id="currenctTBody">
+				  <tr class="success currencyRow">
+					<td>Name:</td>
+					<td id="txtCurrency" class="currencyTD"></td>
+				  </tr>
+				  <tr class="info currencyRow">
+					<td>Code:</td>
+					<td id="txtCurrencyCode" class="currencyTD"></td>
+				  </tr>
+				  <tr class="success currencyRow">
+					<td>Symbol:</td>
+					<td id="txtCurrencySymbol" class="currencyTD"></td>
+				  </tr>
+				</tbody>
+			  </table>
+			</div>
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
+		  </div>
+		  </div>
+		</div>
+	  </div>
+	  
+	  <!-- Covid modal -->
+	  <div class="modal fade" id="newsModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true" style="display: none;">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h5 class="modal-title" id="newsModalLabel">News</h5>          
+			</div>
+			<div class="modal-body short-modal">
+			  <table id="covidTable" class="table">
+				<tbody id="currenctTBody">
+				  <tr class="success newsRow">
+					<td>Title:</td>
+					<td id="txtTitle" class="newsTD"></td>
+				  </tr>
+				  <tr class="info newsRow">
+					<td>Keywords:</td>
+					<td id="txtKeywords" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Description:</td>
+					<td id="txtDescription" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Category:</td>
+					<td id="txtCategory" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Publish Date:</td>
+					<td id="txtPublishDate" class="newsTD"></td>
+				  </tr>
+				</tbody>
+			  </table>
+			</div>
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	  
+	  <!-- Covid modal -->
+	  <div class="modal fade" id="covidModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true" style="display: none;">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h5 class="modal-title" id="covidModalLabel">Covid</h5>          
+			</div>
+			<div class="modal-body short-modal">
+			  <table id="covidTable" class="table">
+				<tbody id="currenctTBody">
+				  <tr class="success covidRow">
+					<td>Confirmed Cases:</td>
+					<td id="txtConfirmedCases" class="covidTD"></td>
+				  </tr>
+				  <tr class="info covidRow">
+					<td>Active Cases:</td>
+					<td id="txtActiveCases" class="covidTD"></td>
+				  </tr>
+				  <tr class="success covidRow">
+					<td>Deaths:</td>
+					<td id="txtDeaths" class="covidTD"></td>
+				  </tr>
+				</tbody>
+			  </table>
+			</div>
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	  
+	
     <div id="map" style="width:100%; height:100vh;"></div>
 	<script src="https://code.jquery.com/jquery-3.6.4.js"></script>
 	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
