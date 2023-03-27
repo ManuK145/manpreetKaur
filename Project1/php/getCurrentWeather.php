@@ -1,5 +1,5 @@
 <?php
-$url='https://api.openweathermap.org/data/2.5/weather?lat='.$_REQUEST['lat'].'&lon='.$_REQUEST['lng'].'&appid=6946ff5a6e805ddac6b594f1daebd3dc&units=metric';
+$url='https://api.openweathermap.org/data/2.5/weather?lat='.$_REQUEST['lat'].'&lon='.$_REQUEST['lng'].'&appid=4ef2716ffdcebe56f05f86c5c6adb952&units=metric';
 $ch = curl_init();
 curl_setopt($ch, CURLOPT_SSL_VERIFYPEER, false);
 curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
