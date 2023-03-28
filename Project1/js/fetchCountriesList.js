@@ -1,3 +1,4 @@
+let allCountriesCodeName = [];
 let countryBorders = 'countryBorders.geo.json';
 let countries = document.getElementById("countries");
 countries.innerHTML = "<option value=''>Select Country</option>";
