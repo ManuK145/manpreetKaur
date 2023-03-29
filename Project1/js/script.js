@@ -1,5 +1,5 @@
 let position, marker, geojsonFeature, border = null, covidCountry, activeCases, confirmCases, deaths;
-let currentTemp, weatherIcon, humidity, windspeed, tempMin, tempMax, tempTomorrowMin, tempTomorrowMax;
+let currentTemp, weatherIcon, humidity, windspeed, tempMin, tempMax;
 let population, countryCodeISO2, countryCodeISO3, countryDomain, capital, countryName, countryCode, countryFlag, continentName, currencyName, currencySymbol, currencyCode, wikipediaInfo, allLanguages = [];
 let newsTitle, newsDescription, newsLink, newsKeyword, newsCategory, newsPublishDate;
 function getLocation() {
@@ -59,6 +59,24 @@ function displayMap(lat,lng)
 					$('#txtDescription').html(newsDescription);
 					$('#txtCategory').html(newsCategory);
 					$('#txtPublishDate').html(newsPublishDate);
+					newsTitle = result['data']['results'][1]['title'];
+					newsLink = result['data']['results'][1]['link'];
+					newsDescription = result['data']['results'][1]['description'];
+					newsCategory = result['data']['results'][1]['category'][0];
+					newsPublishDate = result['data']['results'][1]['pubDate'];
+					$('#txtTitle2').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
+					$('#txtDescription2').html(newsDescription);
+					$('#txtCategory2').html(newsCategory);
+					$('#txtPublishDate2').html(newsPublishDate);
+					newsTitle = result['data']['results'][2]['title'];
+					newsLink = result['data']['results'][2]['link'];
+					newsDescription = result['data']['results'][2]['description'];
+					newsCategory = result['data']['results'][2]['category'][0];
+					newsPublishDate = result['data']['results'][2]['pubDate'];
+					$('#txtTitle3').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
+					$('#txtDescription3').html(newsDescription);
+					$('#txtCategory3').html(newsCategory);
+					$('#txtPublishDate3').html(newsPublishDate);
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
 					console.log(textStatus, errorThrown);
@@ -86,7 +104,6 @@ function displayMap(lat,lng)
 						success: function(result) {
 							capital = result['data'][0]['capital'];
 							population = result['data'][0]['population'];
-							//countryCode = result['data'][0]['countryCode'];
 							countryName = result['data'][0]['countryName'];
 							continentName = result['data'][0]['continentName'];
 							currencyCode = result['data'][0]['currencyCode'];
@@ -95,6 +112,36 @@ function displayMap(lat,lng)
 							$('#txtCapital').html(capital);
 							$('#txtPopulation').html(population);
 							$('#txtCurrencyCode').html(currencyCode);
+							$.ajax({
+								url: "php/getCapitalWeather.php",
+								type: 'GET',
+								dataType: 'json',
+								data: {
+									capital: capital
+								},
+								success: function(result) {
+									weatherIcon = result['data']['weather'][0]['icon'];
+									currentTemp = result['data']['main']['temp'];
+									windspeed = result['data']['wind']['speed'];
+									humidity = result['data']['main']['humidity'];
+									tempMin = result['data']['main']['temp_min'];
+									tempMax = result['data']['main']['temp_max'];
+									$('#CapitalWeatherIcon').html('<img src="https://openweathermap.org/img/wn/'+weatherIcon+'@2x.png" width="24px">');
+									$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");			
+									$('#txtCapitalWeatherWindspeed').html(windspeed+" km/h");
+									$('#txtCapitalWeatherHumidity').html(humidity+"%");
+									$('#txtCapitalWeatherMax').html(tempMax+"&deg;");
+									$('#txtCapitalWeatherMin').html(tempMin+"&deg;");
+									$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");
+									$('#CapitalHumidityIcon').html('<img src="images/humidity.svg" width="24px">');
+									$('#CapitalWindIcon').html('<img src="images/007-windy.svg" width="24px">');
+									$('.CapitalHiTempIcon').html('<img src="images/temperatureHi.svg" width="24px">');
+									$('.CapitalLoTempIcon').html('<img src="images/temperatureLo.svg" width="24px">');
+								},
+								error: function(jqXHR, textStatus, errorThrown) {
+									console.log(textStatus, errorThrown);
+								}
+							});
 							$.ajax({
 								url: "php/getWikipediaInfo.php",
 								type: 'GET',
@@ -111,8 +158,6 @@ function displayMap(lat,lng)
 									console.log(textStatus, errorThrown);
 								}
 							});
-								
-							
 							$.ajax({
 								url: "php/getCovidCountryList.php",
 								type: 'GET',
@@ -213,41 +258,6 @@ function displayMap(lat,lng)
 			console.log(textStatus, errorThrown);
 		}
 	});
-	$.ajax({
-		url: "php/getCurrentWeather.php",
-		type: 'GET',
-		dataType: 'json',
-		data: {
-			lat: lat,
-			lng: lng
-		},
-		success: function(result) {
-			weatherIcon = result['data']['current']['weather'][0]['icon'];
-			currentTemp = result['data']['current']['temp'];
-			windspeed = result['data']['current']['wind_speed'];
-			humidity = result['data']['current']['humidity'];
-			tempMin = result['data']['daily'][0]['temp']['min'];
-			tempMax = result['data']['daily'][0]['temp']['max'];
-			tempTomorrowMin = result['data']['daily'][1]['temp']['min'];
-			tempTomorrowMax = result['data']['daily'][1]['temp']['max'];
-			$('#CapitalWeatherIcon').html('<img src="https://openweathermap.org/img/wn/'+weatherIcon+'@2x.png" width="24px">');
-			$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");			
-			$('#txtCapitalWeatherWindspeed').html(windspeed+" km/h");
-			$('#txtCapitalWeatherHumidity').html(humidity+"%");
-			$('#txtCapitalWeatherMax').html(tempMax+"&deg;");
-			$('#txtCapitalWeatherMin').html(tempMin+"&deg;");
-			$('#txtCapitalTomorrowsWeatherMax').html(tempTomorrowMax+"&deg;");
-			$('#txtCapitalTomorrowsWeatherMin').html(tempTomorrowMin+"&deg;");
-			$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");
-			$('#CapitalHumidityIcon').html('<img src="images/humidity.svg" width="24px">');
-			$('#CapitalWindIcon').html('<img src="images/007-windy.svg" width="24px">');
-			$('.CapitalHiTempIcon').html('<img src="images/temperatureHi.svg" width="24px">');
-			$('.CapitalLoTempIcon').html('<img src="images/temperatureLo.svg" width="24px">');
-		},
-		error: function(jqXHR, textStatus, errorThrown) {
-			console.log(textStatus, errorThrown);
-		}
-	});
 	
 	$("#countries").change(function() {
 		countryCode = this.value;
@@ -283,6 +293,36 @@ function displayMap(lat,lng)
 						$('#txtCapital').html(capital);
 						$('#txtPopulation').html(population);
 						$('#txtCurrencyCode').html(currencyCode);
+						$.ajax({
+							url: "php/getCapitalWeather.php",
+							type: 'GET',
+							dataType: 'json',
+							data: {
+								capital: capital
+							},
+							success: function(result1) {
+								weatherIcon = result1['data']['weather'][0]['icon'];
+								currentTemp = result1['data']['main']['temp'];
+								windspeed = result1['data']['wind']['speed'];
+								humidity = result1['data']['main']['humidity'];
+								tempMin = result1['data']['main']['temp_min'];
+								tempMax = result1['data']['main']['temp_max'];
+								$('#CapitalWeatherIcon').html('<img src="https://openweathermap.org/img/wn/'+weatherIcon+'@2x.png" width="24px">');
+								$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");			
+								$('#txtCapitalWeatherWindspeed').html(windspeed+" km/h");
+								$('#txtCapitalWeatherHumidity').html(humidity+"%");
+								$('#txtCapitalWeatherMax').html(tempMax+"&deg;");
+								$('#txtCapitalWeatherMin').html(tempMin+"&deg;");
+								$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");
+								$('#CapitalHumidityIcon').html('<img src="images/humidity.svg" width="24px">');
+								$('#CapitalWindIcon').html('<img src="images/007-windy.svg" width="24px">');
+								$('.CapitalHiTempIcon').html('<img src="images/temperatureHi.svg" width="24px">');
+								$('.CapitalLoTempIcon').html('<img src="images/temperatureLo.svg" width="24px">');
+							},
+							error: function(jqXHR, textStatus, errorThrown) {
+								console.log(textStatus, errorThrown);
+							}
+						});
 						$.ajax({
 							url: "php/getWikipediaInfo.php",
 							type: 'GET',
@@ -355,6 +395,24 @@ function displayMap(lat,lng)
 								$('#txtDescription').html(newsDescription);
 								$('#txtCategory').html(newsCategory);
 								$('#txtPublishDate').html(newsPublishDate);
+								newsTitle = result['data']['results'][1]['title'];
+								newsLink = result['data']['results'][1]['link'];
+								newsDescription = result['data']['results'][1]['description'];
+								newsCategory = result['data']['results'][1]['category'][0];
+								newsPublishDate = result['data']['results'][1]['pubDate'];
+								$('#txtTitle2').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
+								$('#txtDescription2').html(newsDescription);
+								$('#txtCategory2').html(newsCategory);
+								$('#txtPublishDate2').html(newsPublishDate);
+								newsTitle = result['data']['results'][2]['title'];
+								newsLink = result['data']['results'][2]['link'];
+								newsDescription = result['data']['results'][2]['description'];
+								newsCategory = result['data']['results'][2]['category'][0];
+								newsPublishDate = result['data']['results'][2]['pubDate'];
+								$('#txtTitle3').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
+								$('#txtDescription3').html(newsDescription);
+								$('#txtCategory3').html(newsCategory);
+								$('#txtPublishDate3').html(newsPublishDate);
 							},
 							error: function(jqXHR, textStatus, errorThrown) {
 								console.log(textStatus, errorThrown);
@@ -404,21 +462,7 @@ function displayMap(lat,lng)
 								map.setView([result['data'][0]['latlng'][0],result['data'][0]['latlng'][1]],5);
 								marker = L.marker([result['data'][0]['latlng'][0],result['data'][0]['latlng'][1]]).addTo(map);
 								map.addLayer(marker);
-								/*$.ajax({
-									url: "php/getWikipediaInfo.php",
-									type: 'GET',
-									dataType: 'json',
-									data: {
-										countryName: countryName
-									},
-									success: function(result) {
-										wikipediaInfo = result['data']['extract_html'];
-										$('#txtWiki').html('<b>Wikipedia:</b>'+wikipediaInfo);
-									},
-									error: function(jqXHR, textStatus, errorThrown) {
-										console.log(textStatus, errorThrown);
-									}
-								});*/
+								
 							},
 							error: function(jqXHR, textStatus, errorThrown) {
 								console.log(textStatus, errorThrown);
@@ -433,41 +477,8 @@ function displayMap(lat,lng)
 			error: function(jqXHR, textStatus, errorThrown) {
 				console.log(textStatus, errorThrown);
 			}
-		});
-		$.ajax({
-			url: "php/getCurrentWeather.php",
-			type: 'GET',
-			dataType: 'json',
-			data: {
-				lat: lat,
-				lng: lng
-			},
-			success: function(result) {
-				weatherIcon = result['data']['current']['weather'][0]['icon'];
-				currentTemp = result['data']['current']['temp'];
-				windspeed = result['data']['current']['wind_speed'];
-				humidity = result['data']['current']['humidity'];
-				tempMin = result['data']['daily'][0]['temp']['min'];
-				tempMax = result['data']['daily'][0]['temp']['max'];
-				tempTomorrowMin = result['data']['daily'][1]['temp']['min'];
-				tempTomorrowMax = result['data']['daily'][1]['temp']['max'];
-				$('#CapitalWeatherIcon').html('<img src="https://openweathermap.org/img/wn/'+weatherIcon+'@2x.png" width="24px">');
-				$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");			
-				$('#txtCapitalWeatherWindspeed').html(windspeed+" km/h");
-				$('#txtCapitalWeatherHumidity').html(humidity+"%");
-				$('#txtCapitalWeatherMax').html(tempMax+"&deg;");
-				$('#txtCapitalWeatherMin').html(tempMin+"&deg;");
-				$('#txtCapitalTomorrowsWeatherMax').html(tempTomorrowMax+"&deg;");
-				$('#txtCapitalTomorrowsWeatherMin').html(tempTomorrowMin+"&deg;");
-				$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");
-				$('#CapitalHumidityIcon').html('<img src="images/humidity.svg" width="24px">');
-				$('#CapitalWindIcon').html('<img src="images/007-windy.svg" width="24px">');
-				$('.CapitalHiTempIcon').html('<img src="images/temperatureHi.svg" width="24px">');
-				$('.CapitalLoTempIcon').html('<img src="images/temperatureLo.svg" width="24px">');
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus, errorThrown);
-			}
+		
+		
 		});
 	});
 	
