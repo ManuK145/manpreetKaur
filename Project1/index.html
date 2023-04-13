@@ -6,7 +6,9 @@
 	<title>Gazetteer API</title>
 	<link rel="stylesheet" href="https://ernestoestrada.co.uk/gazetteer/assets/vendors/bootstrap-5.0.0-beta1-dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.3/dist/leaflet.css" />
-	<link rel="stylesheet" href="https://ernestoestrada.co.uk/gazetteer/assets/vendors/Leaflet.EasyButton-master/src/easy-button.css">   
+	<link rel="stylesheet" href="https://ernestoestrada.co.uk/gazetteer/assets/vendors/Leaflet.EasyButton-master/src/easy-button.css">  
+	<link rel="stylesheet" href="https://ernestoestrada.co.uk/gazetteer/assets/vendors/Leaflet.markercluster-1.4.1/dist/MarkerCluster.css">
+    <link rel="stylesheet" href="https://ernestoestrada.co.uk/gazetteer/assets/vendors/Leaflet.markercluster-1.4.1/dist/MarkerCluster.Default.css">	 
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@opencage/leaflet-opencage-geosearch/leaflet-opencage-geosearch.css" />
 	<link href="https://site-assets.fontawesome.com/releases/v5.15.4/css/all.css" rel="stylesheet">
 	<link rel="stylesheet" href="css/style.css" />
@@ -17,12 +19,12 @@
 		<select name="countries" id="countries" class="dropdownCountry"></select>
 	</div>
 
-	<!--Wikipedia Modal -->
-	<div class="modal fade" id="wikiModal" tabindex="-1" aria-labelledby="wikiModalLabel" aria-hidden="true" style="display: none;">
+	<!-- Info Modal -->
+	<div class="modal fade" id="infoModal" tabindex="-1" aria-labelledby="infoModalLabel" aria-hidden="true" style="display: none;">
 		<div class="modal-dialog">
 		  <div class="modal-content">
 			<div class="modal-header">
-			  <h5 class="modal-title" id="wikiModalLabel"></h5>
+			  <h5 class="modal-title" id="infoModalLabel"></h5>
 			</div>
 			<div class="modal-body">
 			  <table id="countryInfoTable" class="table">
@@ -31,6 +33,10 @@
 				  <tr>
 					<th scope="row">Population:</th>
 					<td id="txtPopulation"></td>
+				  </tr>
+				  <tr>
+					<th scope="row">Area in SqKm:</th>
+					<td id="txtAreaInSqKm"></td>
 				  </tr>
 				  <tr>
 					<th scope="row">Capital:</th>
@@ -54,6 +60,21 @@
 				  </tr>
 				</tbody>
 			  </table>
+			</div>
+			<div class="modal-footer">
+			  <button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
+			</div>
+		  </div>
+		</div>
+	  </div>
+	  
+	  <div class="modal fade" id="wikiModal" tabindex="-1" aria-labelledby="wikiModalLabel" aria-hidden="true" style="display: none;">
+		<div class="modal-dialog">
+		  <div class="modal-content">
+			<div class="modal-header">
+			  <h5 class="modal-title" id="wikiModalLabel"></h5>
+			</div>
+			<div class="modal-body">
 			  <div id="txtWiki"></div>
 			</div>
 			<div class="modal-footer">
@@ -62,6 +83,9 @@
 		  </div>
 		</div>
 	  </div>
+	  
+
+	
 	  
 		<!--Weather Modal -->
 		  <div class="modal fade" id="weatherModal" tabindex="-1" aria-labelledby="weatherModalLabel" aria-hidden="true" style="display: none;">
@@ -73,10 +97,15 @@
 				<div class="modal-body short-modal">
 				  <table id="weatherTable" class="table">
 					<tbody>
+					   <tr>
+							<td id="CapitalWeather"></td>
+							<th scope="row">Current Weather:</th>
+							<td id="txtCapitalWeatherCurrent"></td>
+						</tr>
 					  <tr>
 						<td id="CapitalWeatherIcon"></td>
 						<th scope="row">Current Temp:</th>
-						<td id="txtCapitalWeatherCurrent"></td>
+						<td id="txtCapitalWeatherTemp"></td>
 					  </tr>
 					  <tr>
 						<td id="CapitalWindIcon"></td>
@@ -98,16 +127,7 @@
 						<th scope="row">Low:</th>
 						<td id="txtCapitalWeatherMin"></td>
 					  </tr>
-					  <tr>
-						<td class="CapitalHiTempIcon"></td>
-						<th scope="row">Tomorrow's High:</th>
-						<td id="txtCapitalTomorrowsWeatherMax"></td>
-					  </tr>
-					  <tr>
-						<td class="CapitalLoTempIcon"></td>
-						<th scope="row">Tomorrow's Low:</th>
-						<td id="txtCapitalTomorrowsWeatherMin"></td>
-					  </tr>
+					  
 					</tbody>
 				  </table>
 				</div>
@@ -183,6 +203,46 @@
 				  </tr>
 				</tbody>
 			  </table>
+			  <table id="newsTable" class="table">
+				<tbody id="currenctTBody">
+				  <tr class="success newsRow">
+					<td>Title:</td>
+					<td id="txtTitle2" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Description:</td>
+					<td id="txtDescription2" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Category:</td>
+					<td id="txtCategory2" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Publish Date:</td>
+					<td id="txtPublishDate2" class="newsTD"></td>
+				  </tr>
+				</tbody>
+			  </table>
+			  <table id="newsTable" class="table">
+				<tbody id="currenctTBody">
+				  <tr class="success newsRow">
+					<td>Title:</td>
+					<td id="txtTitle3" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Description:</td>
+					<td id="txtDescription3" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Category:</td>
+					<td id="txtCategory3" class="newsTD"></td>
+				  </tr>
+				  <tr class="success newsRow">
+					<td>Publish Date:</td>
+					<td id="txtPublishDate3" class="newsTD"></td>
+				  </tr>
+				</tbody>
+			  </table>
 			</div>
 			<div class="modal-footer">
 			  <button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
@@ -193,7 +253,7 @@
 	  
 	  <!-- Covid modal -->
 	  <div class="modal fade" id="covidModal" tabindex="-1" aria-labelledby="newsModalLabel" aria-hidden="true" style="display: none;">
-		<div class="modal-dialog">
+		<div class="modal-dialog" style="background: url('images/covid.jpg');">
 		  <div class="modal-content">
 			<div class="modal-header">
 			  <h5 class="modal-title" id="covidModalLabel">Covid</h5>          
@@ -222,6 +282,45 @@
 		  </div>
 		</div>
 	  </div>
+	
+	  <!-- holidays modal -->
+  <div class="modal fade" id="holidaysModal" tabindex="-1" aria-labelledby="holidaysModalLabel" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="holidaysModalLabel"></h5>
+        </div>
+        <div class="modal-body short-modal">
+          <h3>Holidays List</h3>
+		  <hr/>
+		  <div id="holidaysList"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <!-- airports modal -->
+  <div class="modal fade" id="airportsModal" tabindex="-1" aria-labelledby="airportsModalLabel" aria-hidden="true" style="display: none;">
+    <div class="modal-dialog">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title" id="airportsModalLabel"></h5>
+        </div>
+        <div class="modal-body short-modal">
+          <h3>Airports List</h3>
+		  <hr/>
+		  <div id="airportsList"></div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary closeBtn" data-bs-dismiss="modal">Close</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  
 	  
 	
     <div id="map" style="width:100%; height:100vh;"></div>
@@ -229,6 +328,7 @@
 	<script src="https://unpkg.com/leaflet@1.9.3/dist/leaflet.js"></script>
 	<script src="https://ernestoestrada.co.uk/gazetteer/assets/vendors/bootstrap-5.0.0-beta1-dist/js/bootstrap.min.js"></script>
 	<script src="https://ernestoestrada.co.uk/gazetteer/assets/vendors/Leaflet.EasyButton-master/src/easy-button.js"></script>
+	<script src="https://ernestoestrada.co.uk/gazetteer/assets/vendors/Leaflet.markercluster-1.4.1/dist/leaflet.markercluster.js"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@opencage/geosearch-bundle"></script>
 	<script src="https://cdn.jsdelivr.net/npm/@opencage/leaflet-opencage-geosearch@0.0.17/leaflet-opencage-geosearch.js"></script>
 	<script type="text/javascript" src="js/fetchCountriesList.js"></script>
