@@ -5,7 +5,7 @@ countries.innerHTML = "<option value=''>Select Country</option>";
 fetch(countryBorders).then(
 	function(response){
 		if(response.status !== 200) {
-			console.log('Looks like there was a problem. Status Code: ' + response.status);
+			alert('There was a problem fetching Countries, Please Check your connection.');
 			return;
 		}
 		response.json().then(function(data){

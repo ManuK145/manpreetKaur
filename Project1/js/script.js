@@ -1,8 +1,9 @@
 let map, markerCapitalGroup, markerNeighbourGroup, markerEarthquakeGroup, position, marker, geojsonFeature, border = null, covidCountry, activeCases, confirmCases, deaths;
 let geonameid, currentTemp, weatherIcon, humidity, windspeed, tempMin, tempMax;
-let population, areainsqkm, countryCodeISO2, countryCodeISO3, countryDomain, capital, countryName, countryCode, countryFlag, northPoint, southPoint, eastPoint, westPoint, continentName, currencyName, currencySymbol, currencyCode, wikipediaInfo, allLanguages = [], allHolidays = [], allHolidaysDate = [];
+let population, areainsqkm, countryCodeISO2, countryCodeISO3, countryDomain, capital, countryName, countryCode, countryFlag, northPoint, southPoint, eastPoint, westPoint, continentName, currencyName, currencySymbol, currencyCode, wikipediaInfo, allLanguages = [];
+let airportMarkers;
 let newsTitle, newsDescription, newsLink, newsKeyword, newsCategory, newsPublishDate;
-let unescoLayerGroup = L.markerClusterGroup();
+
 let iconCapitalOptions = {
 	iconUrl: 'images/capital.png',
 	iconSize: [40,40]
@@ -59,16 +60,15 @@ function showPosition(position) {
 getLocation();
 function polystyle(feature) {
     return {
-        fillColor: 'green',
+        fillColor: 'purple',
         weight: 2,
         opacity: 1,
-        color: 'orange',
+        color: 'black',
         fillOpacity: 0.2
     };
 }
 
-function displayMap(lat,lng)
-{
+function displayMap(lat,lng){
 	var map = L.map('map').setView([lat,lng],5);
 	markerCapitalGroup = L.layerGroup().addTo(map);
 	L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -86,29 +86,12 @@ function displayMap(lat,lng)
 			lng: lng
 		},
 		success: function(result) {
+			if (result['status']['name'] == 'error') {
+				alert(result['status']['description']);
+				return;
+			}
 			countryCode = result["data"]["sys"]["country"];
-			$.ajax({
-				url: "php/getHolidays.php",
-				type: 'GET',
-				dataType: 'json',
-				data: {
-					countryCode: countryCode
-				},
-				success: function(result) {
-					for(let h = 0; h < result['data']['response']['holidays'].length; h++)
-					{
-						allHolidays.push(result['data']['response']['holidays'][h]['name']);
-						allHolidaysDate.push(result['data']['response']['holidays'][h]['date']['iso']);
-					}
-					for(let i = 0; i < allHolidays.length; i++)
-					{
-						document.getElementById("holidaysList").innerHTML += "<div class='holiday'>"+allHolidays[i]+" - "+allHolidaysDate[i]+"</div>";						
-					}
-				},
-				error: function(jqXHR, textStatus, errorThrown) {
-					console.log(textStatus, errorThrown);
-				}
-			});
+			
 			$.ajax({
 				url: "php/getAirports.php",
 				type: 'GET',
@@ -117,22 +100,64 @@ function displayMap(lat,lng)
 					countryCode: countryCode
 				},
 				success: function(result) {
-					markerAirportGroup = L.layerGroup().addTo(map);
-					for(let i = 0; i < 10; i++)
-					{						
-						marker = L.marker([result['data']['response'][i]['lat'],result['data']['response'][i]['lng']],markerAirportsOptions).addTo(markerAirportGroup);
-						map.addLayer(marker);
-						marker.bindPopup(result['data']['response'][i]['name']+" - "+result['data']['response'][i]['iata_code']);		
+					if (result['status']['name'] == 'error') {
+						alert(result['status']['description']);
+						return;
 					}
-					for(let i = 0; i < result['data']['response'].length; i++)
-					{
-						document.getElementById("airportsList").innerHTML += "<div class='airports'>"+result['data']['response'][i]['name']+" - "+result['data']['response'][i]['iata_code']+"</div>";
-					}
-				},
-				error: function(jqXHR, textStatus, errorThrown) {
-					console.log(textStatus, errorThrown);
-				}
-			});
+					
+					let airports = {
+                        "type": "FeatureCollection",
+                        "features": []
+                    };
+
+					// Check if response data exists and has a length greater than 0
+                    if (result['data'] && result['data']['response'] && result['data']['response'].length > 0) {
+                        for (let i = 0; i < 10; i++) {
+                            if (result['data']['response'][i] && result['data']['response'][i]['lng'] && result['data']['response'][i]['lat'] && result['data']['response'][i]['name'] && result['data']['response'][i]['iata_code']) {
+                                let airport = {
+                                    "type": "Feature",
+                                    "geometry": {
+                                        "type": "Point",
+                                        "coordinates": [result['data']['response'][i]['lng'], result['data']['response'][i]['lat']]
+                                    },
+                                    "properties": {
+                                        "name": result['data']['response'][i]['name'],
+                                        "iata_code": result['data']['response'][i]['iata_code']
+                                    }
+                                };
+                                airports.features.push(airport);
+                            }
+                        }
+            
+                        for (let i = 0; i < result['data']['response'].length; i++) {
+                            if (result['data']['response'][i] && result['data']['response'][i]['name'] && result['data']['response'][i]['iata_code']) {
+                                document.getElementById("airportsList").innerHTML += "<div class='airports'>" + result['data']['response'][i]['name'] + " - " + result['data']['response'][i]['iata_code'] + "</div>";
+                            }
+                        }
+            
+                        airportMarkers = L.markerClusterGroup();
+                        let marker = L.geoJSON(airports, {
+                            pointToLayer: function (feature, latlng) {
+                                return L.marker(latlng, {
+                                    icon: L.icon(iconAirportsOptions),
+                                    title: "AirportLocation",
+                                    clickable: true
+                                });
+                            },
+                            onEachFeature: function (feature, layer) {
+                                layer.bindPopup(feature.properties.name + " - " + feature.properties.iata_code);
+                            }
+                        });
+            
+                        airportMarkers.addLayer(marker);
+                        map.addLayer(airportMarkers);
+                    }
+                },
+                error: function (jqXHR, textStatus, errorThrown) {
+                    console.log(textStatus, errorThrown);
+                }
+            });
+
 			$.ajax({
 				url: "php/getNews.php",
 				type: 'GET',
@@ -141,33 +166,39 @@ function displayMap(lat,lng)
 					countryCode: countryCode
 				},
 				success: function(result) {
-					newsTitle = result['data']['results'][0]['title'];
-					newsLink = result['data']['results'][0]['link'];
-					newsDescription = result['data']['results'][0]['description'];
-					newsCategory = result['data']['results'][0]['category'][0];
-					newsPublishDate = result['data']['results'][0]['pubDate'];
-					$('#txtTitle1').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
-					$('#txtDescription1').html(newsDescription);
-					$('#txtCategory1').html(newsCategory);
-					$('#txtPublishDate1').html(newsPublishDate);
-					newsTitle = result['data']['results'][1]['title'];
-					newsLink = result['data']['results'][1]['link'];
-					newsDescription = result['data']['results'][1]['description'];
-					newsCategory = result['data']['results'][1]['category'][0];
-					newsPublishDate = result['data']['results'][1]['pubDate'];
-					$('#txtTitle2').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
-					$('#txtDescription2').html(newsDescription);
-					$('#txtCategory2').html(newsCategory);
-					$('#txtPublishDate2').html(newsPublishDate);
-					newsTitle = result['data']['results'][2]['title'];
-					newsLink = result['data']['results'][2]['link'];
-					newsDescription = result['data']['results'][2]['description'];
-					newsCategory = result['data']['results'][2]['category'][0];
-					newsPublishDate = result['data']['results'][2]['pubDate'];
-					$('#txtTitle3').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
-					$('#txtDescription3').html(newsDescription);
-					$('#txtCategory3').html(newsCategory);
-					$('#txtPublishDate3').html(newsPublishDate);
+					if (result['status']['name'] == 'error') {
+						alert(result['status']['description']);
+						return;
+					}
+					let newsTBody = $('#newsTBody');
+              		for (let i = 0; i < 3; i++) {
+                    let newsData = result['data']['results'][i];
+                    let newsTitle = newsData['title'];
+                    let newsLink = newsData['link'];
+                    let newsDescription = newsData['description'];
+                    let newsCategory = newsData['category'][0];
+                    let newsPublishDate = newsData['pubDate'];
+              
+                    let row = "<tr class='success newsRow'>" +
+                      "<td>Title:</td>" +
+                      "<td class='txtTitle'><a style='text-decoration: none;' target='_blank' href='" + newsLink + "'>" + newsTitle + "</a></td>" +
+                      "</tr>" +
+                      "<tr class='success newsRow'>" +
+                      "<td>Description:</td>" +
+                      "<td class='txtDescription'>" + newsDescription + "</td>" +
+                      "</tr>" +
+                      "<tr class='success newsRow'>" +
+                      "<td>Category:</td>" +
+                      "<td class='txtCategory'>" + newsCategory + "</td>" +
+                      "</tr>" +
+                      "<tr class='success newsRow'>" +
+                      "<td>Publish Date:</td>" +
+                      "<td class='txtPublishDate'>" + newsPublishDate + "</td>" +
+                      "</tr>";
+              
+                    newsTBody.append(row);
+                  }
+					
 				},
 				error: function(jqXHR, textStatus, errorThrown) {
 					console.log(textStatus, errorThrown);
@@ -193,23 +224,30 @@ function displayMap(lat,lng)
 							country: countryCode
 						},
 						success: function(result) {
-							geonameid = result['data'][0]['geonameId'];
-							capital = result['data'][0]['capital'];
-							population = result['data'][0]['population'];
-							areainsqkm = result['data'][0]['areaInSqKm'];
-							countryName = result['data'][0]['countryName'];
-							continentName = result['data'][0]['continentName'];
-							currencyCode = result['data'][0]['currencyCode'];
-							northPoint = result['data'][0]['north'];
-							southPoint = result['data'][0]['south'];
-							eastPoint = result['data'][0]['east'];
-							westPoint = result['data'][0]['west'];
+							if (result['status']['name'] == 'error') {
+								alert(result['status']['description']);
+								return;
+							}
+							geonameid = countryData['geonameId'] !== undefined ? countryData['geonameId'] : '';
+							capital = countryData['capital'] !== undefined ? countryData['capital'] : '';
+							population = countryData['population'] !== undefined ? countryData['population'] : '';
+							areainsqkm = countryData['areaInSqKm'] !== undefined ? countryData['areaInSqKm'] : '';
+							countryName = countryData['countryName'] !== undefined ? countryData['countryName'] : '';
+							getTopSites(countryName);
+                            getHotels(countryName);
+							continentName = countryData['continentName'] !== undefined ? countryData['continentName'] : '';
+							currencyCode = countryData['currencyCode'] !== undefined ? countryData['currencyCode'] : '';
+							northPoint = countryData['north'] !== undefined ? countryData['north'] : '';
+							southPoint = countryData['south'] !== undefined ? countryData['south'] : '';
+							eastPoint = countryData['east'] !== undefined ? countryData['east'] : '';
+							westPoint = countryData['west'] !== undefined ? countryData['west'] : '';
 							$('#infoModalLabel').html(countryName);
 							$('.txtCapitalName').html(capital);
 							$('#txtAreaInSqKm').html(areainsqkm);
 							$('#txtCapital').html(capital);
 							$('#txtPopulation').html(population);
 							$('#txtCurrencyCode').html(currencyCode);
+							
 							$.ajax({
 								url: "php/getNeighbours.php",
 								type: 'GET',
@@ -218,60 +256,54 @@ function displayMap(lat,lng)
 									geonameId: geonameid
 								},
 								success: function(result) {
-									markerNeighbourGroup = L.layerGroup().addTo(map);
-									for(let m = 0; m < result['data']['geonames'].length; m++)
-									{
-										marker = L.marker([result['data']['geonames'][m]['lat'],result['data']['geonames'][m]['lng']],markerNeighboursOptions).addTo(markerNeighbourGroup);
-										map.addLayer(marker);
-										marker.bindPopup("Name : "+result['data']['geonames'][m]['name']+"<br>Country Name : "+result['data']['geonames'][m]['countryName']+"<br>Latitude : "+result['data']['geonames'][m]['lat']+"<br>Longitude : "+result['data']['geonames'][m]['lng']);
+									if (result['status']['name'] == 'error') {
+										alert(result['status']['description']);
+										return;
 									}
-								},
-								error: function(jqXHR, textStatus, errorThrown) {
-									console.log('Unesco Data Error',textStatus, errorThrown);
-								}
-							});
-							$.ajax({
-								url: "php/getUnesco.php",
-								type: 'GET',
-								dataType: "json",
-								data: {
-									countryName: countryName
-								},
-								success: function(result) {
-									unescoNumber = result.data.unescoSites.nhits;
-									map.addLayer(unescoLayerGroup);
-									if (unescoNumber < 1)
-									{
-										$('#unescoModal').modal('show');
-										map.addLayer(largeCityCluster);
-										map.addLayer(cityMarkersCluster);
-									}
-									else if (unescoNumber > 0)
-									{
-										for (let i = 0; i < result.data.unescoSites.records.length; i++)
-										{
-											unescoIcon = L.icon({
-												iconUrl: 'images/unesco.svg',
-												iconSize: [50, 50],
-												popupAnchor: [0,-15]
-											});
-											unescoSite = result.data.unescoSites.records[i].fields.site;
-											unescoLat = result.data.unescoSites.records[i].fields.coordinates[0];
-											unescoLng = result.data.unescoSites.records[i].fields.coordinates[1];
-											unescoThumbnail = result.data.unescoSites.records[i].fields.image_url.filename;
-											unsescoDescription = result.data.unescoSites.records[i].fields.short_description;
-											unescoUrl = `https://whc.unesco.org/en/list/${result.data.unescoSites.records[i].fields.id_number}`;
-											unescoMarker = L.marker(new L.LatLng(unescoLat, unescoLng), ({icon: unescoIcon})).bindPopup(`<div class="markerContainer"><h3>${unescoSite}</h3><img class="markerThumbnail" src='https://whc.unesco.org/uploads/sites/${unescoThumbnail}'><p class="markerTxtDescription">${unsescoDescription}</p></div><div id="city-link"><a href="${unescoUrl}" target="_blank">Learn more</a></div>`, {
-												maxWidth : 300
-											});
-											unescoLayerGroup.addLayer(unescoMarker);
-										}
-									};
-								},
-								error: function(jqXHR, textStatus, errorThrown) {
-									console.log('Unesco Data Error',textStatus, errorThrown);
-								}
-							});
+									let neighboursData = {
+                                        "type": "FeatureCollection",
+                                        "features": []
+                                    }
+
+                                    for (let m = 0; m < result['data']['geonames'].length; m++) {
+                                        let neighbour = {
+                                            "type": "Feature",
+                                            "geometry": {
+                                                "type": "Point",
+                                                "coordinates": [result['data']['geonames'][m]['lng'], result['data']['geonames'][m]['lat']]
+                                            },
+                                            "properties": {
+                                                "name": result['data']['geonames'][m]['name'],
+                                                "countryName": result['data']['geonames'][m]['countryName'],
+                                                "lat": result['data']['geonames'][m]['lat'],
+                                                "lon": result['data']['geonames'][m]['lng'],
+                                            }
+                                        }
+                                        neighboursData.features.push(neighbour);
+                                    }
+
+                                    markerNeighbourGroup = L.markerClusterGroup();
+
+                                    let marker = L.geoJSON(neighboursData, {
+                                        pointToLayer: function (feature, latlng) {
+                                            return L.marker(latlng, {
+                                                icon: L.icon(iconNeighboursOptions),
+                                                title: "NeighbourLocation",
+                                                clickable: true
+                                            });
+                                        },
+                                        onEachFeature: function (feature, layer) {
+                                            layer.bindPopup("Name : " + feature.properties.name + "<br>Country Name : " + feature.properties.countryName + "<br>Latitude : " + feature.properties.lat + "<br>Longitude : " + feature.properties.lon);
+                                        }
+                                    });
+
+                                    markerNeighbourGroup.addLayer(marker);
+                                    map.addLayer(markerNeighbourGroup);
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    console.log('Unesco Data Error', textStatus, errorThrown);
+                                }
+                            });
 
 							$.ajax({
 								url: "php/getEarthquakes.php",
@@ -284,13 +316,50 @@ function displayMap(lat,lng)
 									west: westPoint
 								},
 								success: function(result) {
-									markerEarthquakeGroup = L.layerGroup().addTo(map);
-									for(let m = 0; m < result['data']['earthquakes'].length; m++)
-									{
-										marker = L.marker([result['data']['earthquakes'][m]['lat'],result['data']['earthquakes'][m]['lng']],markerEarthquakeOptions).addTo(markerEarthquakeGroup);
-										map.addLayer(marker);
-										marker.bindPopup("Earthquake Depth : "+result['data']['earthquakes'][m]['depth']+"<br>Latitude : "+result['data']['earthquakes'][m]['lat']+"<br>Longitude : "+result['data']['earthquakes'][m]['lng']);
+									if (result['status']['name'] == 'error') {
+										alert(result['status']['description']);
+										return;
 									}
+									let earthquakePlaces = {
+                                        "type": "FeatureCollection",
+                                        "features": []
+                                    }
+
+                                    for (let m = 0; m < result['data']['earthquakes'].length; m++) {
+                                        let earthquakePlace = {
+                                            "type": "Feature",
+                                            "geometry": {
+                                                "type": "Point",
+                                                "coordinates": [result['data']['earthquakes'][m]['lng'], result['data']['earthquakes'][m]['lat']] // San Francisco International Airport
+                                            },
+                                            "properties": {
+                                                "depth": result['data']['earthquakes'][m]['depth'],
+                                                "lat": result['data']['earthquakes'][m]['lat'],
+                                                "lon": result['data']['earthquakes'][m]['lng'],
+                                            }
+                                        }
+                                        earthquakePlaces.features.push(earthquakePlace);
+                                    }
+
+                                    markerEarthquakeGroup = L.markerClusterGroup();
+
+
+                                    let marker = L.geoJSON(earthquakePlaces, {
+                                        pointToLayer: function (feature, latlng) {
+                                            return L.marker(latlng, {
+                                                icon: L.icon(iconEarthquakeOptions),
+                                                title: "EarthquakeLocation",
+                                                clickable: true
+                                            });
+                                        },
+                                        onEachFeature: function (feature, layer) {
+                                            layer.bindPopup("Earthquake Depth : " + feature.properties.depth + "<br>Latitude : " + feature.properties.lat + "<br>Longitude : " + feature.properties.lon);
+                                        }
+                                    });
+
+                                    markerEarthquakeGroup.addLayer(marker);
+                                    map.addLayer(markerEarthquakeGroup);
+
 								},
 								error: function(jqXHR, textStatus, errorThrown) {
 									console.log(textStatus, errorThrown);
@@ -305,6 +374,10 @@ function displayMap(lat,lng)
 									capital: capital
 								},
 								success: function(result) {
+									if (result['status']['name'] == 'error') {
+										alert(result['status']['description']);
+										return;
+									}
 									weatherIcon = result['data']['weather'][0]['icon'];
 									currentTemp = result['data']['main']['temp'];
 									currentWeather = result['data']['weather'][0]['main'];
@@ -312,36 +385,7 @@ function displayMap(lat,lng)
 									humidity = result['data']['main']['humidity'];
 									tempMin = result['data']['main']['temp_min'];
 									tempMax = result['data']['main']['temp_max'];
-									if(currentWeather == "Haze")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/haze.jpg')";
-									else if(currentWeather == "Mist")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/mist.jpg')";
-									else if(currentWeather == "Clear")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/sky.jpg')";
-									else if(currentWeather == "Rain")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/rainy.jpg')";
-									else if(currentWeather == "Snow")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/snow.jpg')";
-									else if(currentWeather == "Ash")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/ash.jpg')";
-									else if(currentWeather == "Tornado")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/tornado.jpg')";
-									else if(currentWeather == "Squall")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/squall.jpg')";
-									else if(currentWeather == "Sand")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/sand.jpg')";
-									else if(currentWeather == "Fog")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/fog.jpg')";
-									else if(currentWeather == "Dust")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/dust.jpg')";
-									else if(currentWeather == "Drizzle")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/drizzle.jpg')";
-									else if(currentWeather == "Thunderstorm")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/thunderstorm.jpg')";
-									else if(currentWeather == "Clouds")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/clouds.jpg')";
-										else if(currentWeather == "Smoke")
-										document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/smoke.jpg')";
+									
 									$('#CapitalWeatherIcon').html('<img src="https://openweathermap.org/img/wn/'+weatherIcon+'@2x.png" width="24px">');
 									$('#txtCapitalWeatherTemp').html(currentTemp+"&deg;");	
 									$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");			
@@ -358,6 +402,7 @@ function displayMap(lat,lng)
 									console.log(textStatus, errorThrown);
 								}
 							});
+
 							$.ajax({
 								url: "php/getWikipediaInfo.php",
 								type: 'GET',
@@ -366,47 +411,13 @@ function displayMap(lat,lng)
 									countryName: countryName
 								},
 								success: function(result) {
+									if (result['status']['name'] == 'error') {
+										alert(result['status']['description']);
+										return;
+									}
 									wikipediaInfo = result['data']['extract_html'];
 									wikipediaLink = result['data']['content_urls']['desktop']['page'];
 									$('#txtWiki').html('<b>Wikipedia: <a target="_blank" href="'+wikipediaLink+'">'+countryName+'</a></b>'+wikipediaInfo);
-								},
-								error: function(jqXHR, textStatus, errorThrown) {
-									console.log(textStatus, errorThrown);
-								}
-							});
-							$.ajax({
-								url: "php/getCovidCountryList.php",
-								type: 'GET',
-								dataType: 'json',
-								data: { },
-								success: function(result) {
-									for(let c = 0; c < result['data'].length; c++)
-									{
-										if(result['data'][c]['Country'] == countryName)
-										{
-											covidCountry = result['data'][c]['Country'];
-											$.ajax({
-												url: "php/getCovidData.php",
-												type: 'GET',
-												dataType: 'json',
-												data: {
-													country: covidCountry
-												},
-												success: function(result) {
-													activeCases = result['data'][result['data'].length-1]['Active'];
-													confirmCases = result['data'][result['data'].length-1]['Confirmed'];
-													deaths = result['data'][result['data'].length-1]['Deaths'];
-													$('#txtConfirmedCases').html(confirmCases);
-													$('#txtActiveCases').html(activeCases);
-													$('#txtDeaths').html(deaths);
-												},
-												error: function(jqXHR, textStatus, errorThrown) {
-													console.log(textStatus, errorThrown);
-												}
-											});
-											break;
-										}
-									}
 								},
 								error: function(jqXHR, textStatus, errorThrown) {
 									console.log(textStatus, errorThrown);
@@ -421,6 +432,10 @@ function displayMap(lat,lng)
 									currencyCode: currencyCode
 								},
 								success: function(result) {
+									if (result['error']) {
+										alert(result['error-message']);
+										return;
+									}
 									currencyConversion = result['data'];
 									$("#txtExchangeRate").html("1 USD = "+currencyConversion+" "+currencyCode);
 								},
@@ -428,6 +443,7 @@ function displayMap(lat,lng)
 									console.log(textStatus, errorThrown);
 								}
 							});
+
 							$.ajax({
 								url: "php/getCurrencyData.php",
 								type: 'GET',
@@ -436,19 +452,36 @@ function displayMap(lat,lng)
 									countryCode: countryCode
 								},
 								success: function(result) {
-									currencyName = result['data'][0]['currencies'][currencyCode]["name"];
-									currencySymbol = result['data'][0]['currencies'][currencyCode]["symbol"];
-									countryDomain = result['data'][0]['tld'];
-									countryCodeISO2 = result['data'][0]['cca2'];
-									countryCodeISO3 = result['data'][0]['cca3'];
-									languages = result['data'][0]['languages'];
-									allLanguages = [];
-									for(let l in languages)
-										allLanguages.push(languages[l]);
-									countryFlag = result['data'][0]['flags']['png'];
-									$('#txtWikiImg').html("<img id='flag' src='"+countryFlag+"'><br>");
+									if (result['status']['name'] == 'error') {
+										alert(result['status']['description']);
+										return;
+									}
+
+									// Check if the properties exist and assign them to variables
+                                    if (result['data'][0]['currencies'] && result['data'][0]['currencies'][currencyCode]) {
+                                        currencyName = result['data'][0]['currencies'][currencyCode]["name"];
+                                        currencySymbol = result['data'][0]['currencies'][currencyCode]["symbol"];
+                                    }
+                                    if (result['data'][0]['tld']) {
+                                        countryDomain = result['data'][0]['tld'];
+                                    }
+                                    if (result['data'][0]['cca2']) {
+                                        countryCodeISO2 = result['data'][0]['cca2'];
+                                    }
+                                    if (result['data'][0]['cca3']) {
+                                        countryCodeISO3 = result['data'][0]['cca3'];
+                                    }
+                                    if (result['data'][0]['languages']) {
+                                        languages = result['data'][0]['languages'];
+                                        allLanguages = Object.values(languages);
+                                    }
+                                    if (result['data'][0]['flags']['png']) {
+                                        countryFlag = result['data'][0]['flags']['png'];
+                                        $('#txtWikiImg').html("<img id='flag' src='" + countryFlag + "'><br>");
+                                    }
+
 									$('#txtCurrency').html(currencyName);
-									$('#txtLanguages').html(allLanguages.toString());
+									$('#txtLanguages').html(allLanguages? allLanguages.toString():"");
 									$('#txtDomain').html(countryDomain);
 									$('#txtIso2').html(countryCodeISO2);
 									$('#txtIso3').html(countryCodeISO3);
@@ -477,36 +510,22 @@ function displayMap(lat,lng)
 	
 	$("#countries").change(function() {
 		countryCode = this.value;
-		map.removeLayer(markerCapitalGroup);
-		map.removeLayer(markerAirportGroup);
-		map.removeLayer(markerNeighbourGroup);
-		map.removeLayer(markerEarthquakeGroup);		
-		map.removeLayer(unescoLayerGroup);		
-		allHolidays = [];
-		allHolidaysDate = [];
-		$.ajax({
-			url: "php/getHolidays.php",
-			type: 'GET',
-			dataType: 'json',
-			data: {
-				countryCode: countryCode
-			},
-			success: function(result) {
-				document.getElementById("holidaysList").innerHTML = "";
-				for(let h = 0; h < result['data']['response']['holidays'].length; h++)
-				{
-					allHolidays.push(result['data']['response']['holidays'][h]['name']);
-					allHolidaysDate.push(result['data']['response']['holidays'][h]['date']['iso']);
-				}
-				for(let i = 0; i < allHolidays.length; i++)
-				{
-					document.getElementById("holidaysList").innerHTML += "<div class='holiday'>"+allHolidays[i]+" - "+allHolidaysDate[i]+"</div>";						
-				}
-			},
-			error: function(jqXHR, textStatus, errorThrown) {
-				console.log(textStatus, errorThrown);
-			}
-		});
+		if (markerCapitalGroup) {
+            map.removeLayer(markerCapitalGroup);
+          }
+        if (airportMarkers) {
+            map.removeLayer(airportMarkers);
+          }
+          if (markerNeighbourGroup) {
+            map.removeLayer(markerNeighbourGroup);
+          }
+          if (markerEarthquakeGroup) {
+            map.removeLayer(markerEarthquakeGroup);
+          }
+          $('#newsTBody').empty();
+          $('#txtWiki').empty();
+       
+		
 		$.ajax({
 			url: "php/getAirports.php",
 			type: 'GET',
@@ -515,23 +534,61 @@ function displayMap(lat,lng)
 				countryCode: countryCode
 			},
 			success: function(result) {
+				console.log(countryCode)
+				if (result['status'] && result['status']['name'] == 'error') {
+					alert(result['status']['description']);
+					return;
+				}
 				document.getElementById("airportsList").innerHTML = "";
-				markerAirportGroup = L.layerGroup().addTo(map);
-				for(let i = 0; i < 10; i++)
-				{
-					marker = L.marker([result['data']['response'][i]['lat'],result['data']['response'][i]['lng']],markerAirportsOptions).addTo(markerAirportGroup);
-					map.addLayer(marker);
-					marker.bindPopup(result['data']['response'][i]['name']+" - "+result['data']['response'][i]['iata_code']);
-				}
-				for(let i = 0; i < result['data']['response'].length; i++)
-				{
-					document.getElementById("airportsList").innerHTML += "<div class='airports'>"+result['data']['response'][i]['name']+" - "+result['data']['response'][i]['iata_code']+"</div>";
-				}
+				let airports = {
+                    "type": "FeatureCollection",
+                    "features": []
+                }
+        
+                if (result['data'] && result['data']['response']) {
+                    for (let i = 0; i < Math.min(result['data']['response'].length, 10); i++) {
+                        let airport = {
+                            "type": "Feature",
+                            "geometry": {
+                                "type": "Point",
+                                "coordinates": [result['data']['response'][i]['lng'], result['data']['response'][i]['lat']] // San Francisco International Airport
+                            },
+                            "properties": {
+                                "name": result['data']['response'][i]['name'],
+                                "iata_code": result['data']['response'][i]['iata_code']
+                            }
+                        }
+                        airports.features.push(airport);
+                    }
+        
+                    for (let i = 0; i < result['data']['response'].length; i++) {
+                        document.getElementById("airportsList").innerHTML += "<div class='airports'>" + result['data']['response'][i]['name'] + " - " + result['data']['response'][i]['iata_code'] + "</div>";
+                    }
+        
+                    airportMarkers = L.markerClusterGroup();
+        
+                    let marker = L.geoJSON(airports, {
+                        pointToLayer: function (feature, latlng) {
+                            return L.marker(latlng, {
+                                icon: L.icon(iconAirportsOptions),
+                                title: "AirportLocation",
+                                clickable: true
+                            });
+                        },
+                        onEachFeature: function (feature, layer) {
+                            layer.bindPopup(feature.properties.name + " - " + feature.properties.iata_code);
+                        }
+                    });
+        
+                    airportMarkers.addLayer(marker);
+                    map.addLayer(airportMarkers);
+                }
 			},
 			error: function(jqXHR, textStatus, errorThrown) {
 				console.log(textStatus, errorThrown);
 			}
 		});
+
 		$.ajax({
 			url: "php/getCountryBorder.php",
 			type: 'GET',
@@ -544,6 +601,7 @@ function displayMap(lat,lng)
 					border.clearLayers();
 				geojsonFeature = result['data'];
 				border = L.geoJSON(geojsonFeature,{style: polystyle}).addTo(map);
+
 				$.ajax({
 					url: "php/getCountryInfo.php",
 					type: 'GET',
@@ -552,11 +610,17 @@ function displayMap(lat,lng)
 						country: countryCode
 					},
 					success: function(result) {
+						if (result['status']['name'] == 'error') {
+							alert(result['status']['description']);
+							return;
+						}
 						geonameid = result['data'][0]['geonameId'];
 						capital = result['data'][0]['capital'];
 						population = result['data'][0]['population'];
 						areainsqkm = result['data'][0]['areaInSqKm'];
 						countryName = result['data'][0]['countryName'];
+						getTopSites(countryName);
+                        getHotels(countryName);
 						continentName = result['data'][0]['continentName'];
 						currencyCode = result['data'][0]['currencyCode'];
 						northPoint = result['data'][0]['north'];
@@ -569,6 +633,7 @@ function displayMap(lat,lng)
 						$('#txtCapital').html(capital);
 						$('#txtPopulation').html(population);
 						$('#txtCurrencyCode').html(currencyCode);
+
 						$.ajax({
 							url: "php/getNeighbours.php",
 							type: 'GET',
@@ -577,60 +642,55 @@ function displayMap(lat,lng)
 								geonameId: geonameid
 							},
 							success: function(result) {
-								markerNeighbourGroup = L.layerGroup().addTo(map);
-								for(let m = 0; m < result['data']['geonames'].length; m++)
-								{
-									marker = L.marker([result['data']['geonames'][m]['lat'],result['data']['geonames'][m]['lng']],markerNeighboursOptions).addTo(markerNeighbourGroup);
-									map.addLayer(marker);
-									marker.bindPopup("Name : "+result['data']['geonames'][m]['name']+"<br>Country Name : "+result['data']['geonames'][m]['countryName']+"<br>Latitude : "+result['data']['geonames'][m]['lat']+"<br>Longitude : "+result['data']['geonames'][m]['lng']);
+								if (result['status']['name'] == 'error') {
+									alert(result['status']['description']);
+									return;
 								}
+								let neighboursData = {
+                                    "type": "FeatureCollection",
+                                    "features": []
+                                }
+
+                                for (let m = 0; m < result['data']['geonames'].length; m++) {
+                                    let neighbour = {
+                                        "type": "Feature",
+                                        "geometry": {
+                                            "type": "Point",
+                                            "coordinates": [result['data']['geonames'][m]['lng'], result['data']['geonames'][m]['lat']]
+                                        },
+                                        "properties": {
+                                            "name": result['data']['geonames'][m]['name'],
+                                            "countryName": result['data']['geonames'][m]['countryName'],
+                                            "lat": result['data']['geonames'][m]['lat'],
+                                            "lon": result['data']['geonames'][m]['lng'],
+                                        }
+                                    }
+                                    neighboursData.features.push(neighbour);
+                                }
+
+                                markerNeighbourGroup = L.markerClusterGroup();
+
+                                let marker = L.geoJSON(neighboursData, {
+                                    pointToLayer: function (feature, latlng) {
+                                        return L.marker(latlng, {
+                                            icon: L.icon(iconNeighboursOptions),
+                                            title: "NeighbourLocation",
+                                            clickable: true
+                                        });
+                                    },
+                                    onEachFeature: function (feature, layer) {
+                                        layer.bindPopup("Name : " + feature.properties.name + "<br>Country Name : " + feature.properties.countryName + "<br>Latitude : " + feature.properties.lat + "<br>Longitude : " + feature.properties.lon);
+                                    }
+                                });
+
+                                markerNeighbourGroup.addLayer(marker);
+                                map.addLayer(markerNeighbourGroup);
 							},
 							error: function(jqXHR, textStatus, errorThrown) {
 								console.log('Unesco Data Error',textStatus, errorThrown);
 							}
 						});
-						$.ajax({
-							url: "php/getUnesco.php",
-							type: 'GET',
-							dataType: "json",
-							data: {
-								countryName: countryName
-							},
-							success: function(result) {
-								unescoNumber = result.data.unescoSites.nhits;
-								map.addLayer(unescoLayerGroup);
-								if (unescoNumber < 1)
-								{
-									$('#unescoModal').modal('show');
-									map.addLayer(largeCityCluster);
-									map.addLayer(cityMarkersCluster);
-								}
-								else if (unescoNumber > 0)
-								{
-									for (let i = 0; i < result.data.unescoSites.records.length; i++)
-									{
-										unescoIcon = L.icon({
-											iconUrl: 'images/unesco.svg',
-											iconSize: [50, 50],
-											popupAnchor: [0,-15]
-										});
-										unescoSite = result.data.unescoSites.records[i].fields.site;
-										unescoLat = result.data.unescoSites.records[i].fields.coordinates[0];
-										unescoLng = result.data.unescoSites.records[i].fields.coordinates[1];
-										unescoThumbnail = result.data.unescoSites.records[i].fields.image_url.filename;
-										unsescoDescription = result.data.unescoSites.records[i].fields.short_description;
-										unescoUrl = `https://whc.unesco.org/en/list/${result.data.unescoSites.records[i].fields.id_number}`;
-										unescoMarker = L.marker(new L.LatLng(unescoLat, unescoLng), ({icon: unescoIcon})).bindPopup(`<div class="markerContainer"><h3>${unescoSite}</h3><img class="markerThumbnail" src='https://whc.unesco.org/uploads/sites/${unescoThumbnail}'><p class="markerTxtDescription">${unsescoDescription}</p></div><div id="city-link"><a href="${unescoUrl}" target="_blank">Learn more</a></div>`, {
-											maxWidth : 300
-										});
-										unescoLayerGroup.addLayer(unescoMarker);
-									}
-								};
-							},
-							error: function(jqXHR, textStatus, errorThrown) {
-								console.log('Unesco Data Error',textStatus, errorThrown);
-							}
-						});
+						
 						$.ajax({
 							url: "php/getEarthquakes.php",
 							type: 'GET',
@@ -642,18 +702,55 @@ function displayMap(lat,lng)
 								west: westPoint
 							},
 							success: function(result) {
-								markerEarthquakeGroup = L.layerGroup().addTo(map);
-								for(let m = 0; m < result['data']['earthquakes'].length; m++)
-								{
-									marker = L.marker([result['data']['earthquakes'][m]['lat'],result['data']['earthquakes'][m]['lng']],markerEarthquakeOptions).addTo(markerEarthquakeGroup);
-									map.addLayer(marker);
-									marker.bindPopup("Earthquake Depth : "+result['data']['earthquakes'][m]['depth']+"<br>Latitude : "+result['data']['earthquakes'][m]['lat']+"<br>Longitude : "+result['data']['earthquakes'][m]['lng']);
+								if (result['status']['name'] == 'error') {
+									alert(result['status']['description']);
+									return;
 								}
-							},
+								let earthquakePlaces = {
+                                    "type": "FeatureCollection",
+                                    "features": []
+                                }
+
+                                for (let m = 0; m < result['data']['earthquakes'].length; m++) {
+                                    let earthquakePlace = {
+                                        "type": "Feature",
+                                        "geometry": {
+                                            "type": "Point",
+                                            "coordinates": [result['data']['earthquakes'][m]['lng'], result['data']['earthquakes'][m]['lat']] // San Francisco International Airport
+                                        },
+                                        "properties": {
+                                            "depth": result['data']['earthquakes'][m]['depth'],
+                                            "lat": result['data']['earthquakes'][m]['lat'],
+                                            "lon": result['data']['earthquakes'][m]['lng'],
+                                        }
+                                    }
+                                    earthquakePlaces.features.push(earthquakePlace);
+                                }
+
+                                markerEarthquakeGroup = L.markerClusterGroup();
+
+
+                                let marker = L.geoJSON(earthquakePlaces, {
+                                    pointToLayer: function (feature, latlng) {
+                                        return L.marker(latlng, {
+                                            icon: L.icon(iconEarthquakeOptions),
+                                            title: "EarthquakeLocation",
+                                            clickable: true
+                                        });
+                                    },
+                                    onEachFeature: function (feature, layer) {
+                                        layer.bindPopup("Earthquake Depth : " + feature.properties.depth + "<br>Latitude : " + feature.properties.lat + "<br>Longitude : " + feature.properties.lon);
+                                    }
+                                });
+
+                                markerEarthquakeGroup.addLayer(marker);
+                                map.addLayer(markerEarthquakeGroup);
+                            },
 							error: function(jqXHR, textStatus, errorThrown) {
 								console.log(textStatus, errorThrown);
 							}
 						});
+
 						$.ajax({
 							url: "php/getCapitalWeather.php",
 							type: 'GET',
@@ -662,6 +759,10 @@ function displayMap(lat,lng)
 								capital: capital
 							},
 							success: function(result1) {
+								if (result['status']['name'] == 'error') {
+									alert(result['status']['description']);
+									return;
+								}
 								weatherIcon = result1['data']['weather'][0]['icon'];
 								currentTemp = result1['data']['main']['temp'];
 								currentWeather = result1['data']['weather'][0]['main'];
@@ -669,36 +770,7 @@ function displayMap(lat,lng)
 								humidity = result1['data']['main']['humidity'];
 								tempMin = result1['data']['main']['temp_min'];
 								tempMax = result1['data']['main']['temp_max'];
-								if(currentWeather == "Haze")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/haze.jpg')";
-								else if(currentWeather == "Mist")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/mist.jpg')";
-								else if(currentWeather == "Clear")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/sky.jpg')";
-								else if(currentWeather == "Rain")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/rainy.jpg')";
-								else if(currentWeather == "Snow")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/snow.jpg')";
-								else if(currentWeather == "Ash")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/ash.jpg')";
-								else if(currentWeather == "Tornado")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/tornado.jpg')";
-								else if(currentWeather == "Squall")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/squall.jpg')";
-								else if(currentWeather == "Sand")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/sand.jpg')";
-								else if(currentWeather == "Fog")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/fog.jpg')";
-								else if(currentWeather == "Dust")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/dust.jpg')";
-								else if(currentWeather == "Drizzle")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/drizzle.jpg')";
-								else if(currentWeather == "Thunderstorm")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/thunderstorm.jpg')";
-								else if(currentWeather == "Clouds")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/clouds.jpg')";
-								else if(currentWeather == "Smoke")
-									document.querySelector("#weatherModal .modal-dialog .modal-content").style.background = "url('images/smoke.jpg')";
+								
 								$('#CapitalWeatherIcon').html('<img src="https://openweathermap.org/img/wn/'+weatherIcon+'@2x.png" width="24px">');
 								$('#txtCapitalWeatherTemp').html(currentTemp+"&deg;");
 								$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");			
@@ -723,6 +795,10 @@ function displayMap(lat,lng)
 								countryName: countryName
 							},
 							success: function(result) {
+								if (result['status']['name'] == 'error') {
+									alert(result['status']['description']);
+									return;
+								}
 								wikipediaInfo = result['data']['extract_html'];
 								wikipediaLink = result['data']['content_urls']['desktop']['page'];
 								$('#txtWiki').html('<b>Wikipedia: <a target="_blank" href="'+wikipediaLink+'">'+countryName+'</a></b>'+wikipediaInfo);
@@ -731,85 +807,55 @@ function displayMap(lat,lng)
 								console.log(textStatus, errorThrown);
 							}
 						});
-						$.ajax({
-							url: "php/getCovidCountryList.php",
-							type: 'GET',
-							dataType: 'json',
-							data: { },
-							success: function(result) {
-								for(let c = 0; c < result['data'].length; c++)
-								{
-									if(result['data'][c]['Country'] == countryName)
-									{
-										covidCountry = result['data'][c]['Country'];
-										$.ajax({
-											url: "php/getCovidData.php",
-											type: 'GET',
-											dataType: 'json',
-											data: {
-												country: covidCountry
-											},
-											success: function(result) {
-												activeCases = result['data'][result['data'].length-1]['Active'];
-												confirmCases = result['data'][result['data'].length-1]['Confirmed'];
-												deaths = result['data'][result['data'].length-1]['Deaths'];
-												$('#txtConfirmedCases').html(confirmCases);
-												$('#txtActiveCases').html(activeCases);
-												$('#txtDeaths').html(deaths);
-											},
-											error: function(jqXHR, textStatus, errorThrown) {
-												console.log(textStatus, errorThrown);
-											}
-										});
-										break;
-									}
-								}
-							},
-							error: function(jqXHR, textStatus, errorThrown) {
-								console.log(textStatus, errorThrown);
-							}
-						});
+						
 						$.ajax({
 							url: "php/getNews.php",
 							type: 'GET',
 							dataType: 'json',
 							data: {
-								countryCode: countryCode
+								countryCode: countryCode,
+								countryName: countryName
 							},
 							success: function(result) {
-								newsTitle = result['data']['results'][0]['title'];
-								newsLink = result['data']['results'][0]['link'];
-								newsDescription = result['data']['results'][0]['description'];
-								newsCategory = result['data']['results'][0]['category'][0];
-								newsPublishDate = result['data']['results'][0]['pubDate'];
-								$('#txtTitle').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
-								$('#txtKeywords').html(newsKeyword);
-								$('#txtDescription').html(newsDescription);
-								$('#txtCategory').html(newsCategory);
-								$('#txtPublishDate').html(newsPublishDate);
-								newsTitle = result['data']['results'][1]['title'];
-								newsLink = result['data']['results'][1]['link'];
-								newsDescription = result['data']['results'][1]['description'];
-								newsCategory = result['data']['results'][1]['category'][0];
-								newsPublishDate = result['data']['results'][1]['pubDate'];
-								$('#txtTitle2').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
-								$('#txtDescription2').html(newsDescription);
-								$('#txtCategory2').html(newsCategory);
-								$('#txtPublishDate2').html(newsPublishDate);
-								newsTitle = result['data']['results'][2]['title'];
-								newsLink = result['data']['results'][2]['link'];
-								newsDescription = result['data']['results'][2]['description'];
-								newsCategory = result['data']['results'][2]['category'][0];
-								newsPublishDate = result['data']['results'][2]['pubDate'];
-								$('#txtTitle3').html("<a style='text-decoration: none;' target='_blank' href='"+newsLink+"'>"+newsTitle+"</a>");
-								$('#txtDescription3').html(newsDescription);
-								$('#txtCategory3').html(newsCategory);
-								$('#txtPublishDate3').html(newsPublishDate);
+								if (result['status']['name'] == 'error') {
+									alert(result['status']['description']);
+									return;
+								}
+								let newsTBody = $('#newsTBody');
+                          
+                              for (let i = 0; i < 3; i++) {
+                                let newsData = result['data']['results'][i];
+                                let newsTitle = newsData['title'];
+                                let newsLink = newsData['link'];
+                                let newsDescription = newsData['description'];
+                                let newsCategory = newsData['category'][0];
+                                let newsPublishDate = newsData['pubDate'];
+                          
+                                let row = "<tr class='success newsRow'>" +
+                                  "<td>Title:</td>" +
+                                  "<td class='txtTitle'><a style='text-decoration: none;' target='_blank' href='" + newsLink + "'>" + newsTitle + "</a></td>" +
+                                  "</tr>" +
+                                  "<tr class='success newsRow'>" +
+                                  "<td>Description:</td>" +
+                                  "<td class='txtDescription'>" + newsDescription + "</td>" +
+                                  "</tr>" +
+                                  "<tr class='success newsRow'>" +
+                                  "<td>Category:</td>" +
+                                  "<td class='txtCategory'>" + newsCategory + "</td>" +
+                                  "</tr>" +
+                                  "<tr class='success newsRow'>" +
+                                  "<td>Publish Date:</td>" +
+                                  "<td class='txtPublishDate'>" + newsPublishDate + "</td>" +
+                                  "</tr>";
+                          
+                                newsTBody.append(row);
+                              }
 							},
 							error: function(jqXHR, textStatus, errorThrown) {
 								console.log(textStatus, errorThrown);
 							}
 						});
+
 						$.ajax({
 							url: "php/getCurrencyConvert.php",
 							type: 'GET',
@@ -818,6 +864,10 @@ function displayMap(lat,lng)
 								currencyCode: currencyCode
 							},
 							success: function(result) {
+								if (result['error']) {
+									alert(result['error-message']);
+									return;
+								}
 								currencyConversion = result['data'];
 								$("#txtExchangeRate").html("1 USD = "+currencyConversion+" "+currencyCode);
 							},
@@ -833,16 +883,35 @@ function displayMap(lat,lng)
 								countryCode: countryCode
 							},
 							success: function(result) {
-								currencyName = result['data'][0]['currencies'][currencyCode]["name"];
-								currencySymbol = result['data'][0]['currencies'][currencyCode]["symbol"];
-								countryDomain = result['data'][0]['tld'];
-								countryCodeISO2 = result['data'][0]['cca2'];
-								countryCodeISO3 = result['data'][0]['cca3'];
-								languages = result['data'][0]['languages'];
-								allLanguages = [];
-								for(let l in languages)
-									allLanguages.push(languages[l]);
-								countryFlag = result['data'][0]['flags']['png'];
+								if (result['status']['name'] == 'error') {
+									alert(result['status']['description']);
+									return;
+								}
+								if (result['data'][0]['currencies'] && result['data'][0]['currencies'][currencyCode]) {
+                                    currencyName = result['data'][0]['currencies'][currencyCode]["name"];
+                                    currencySymbol = result['data'][0]['currencies'][currencyCode]["symbol"];
+                                  }
+                                  
+                                  if (result['data'][0]['tld']) {
+                                    countryDomain = result['data'][0]['tld'];
+                                  }
+                                  
+                                  if (result['data'][0]['cca2']) {
+                                    countryCodeISO2 = result['data'][0]['cca2'];
+                                  }
+                                  
+                                  if (result['data'][0]['cca3']) {
+                                    countryCodeISO3 = result['data'][0]['cca3'];
+                                  }
+                                  
+                                  if (result['data'][0]['languages']) {
+                                    languages = result['data'][0]['languages'];
+                                  }
+                                  
+                                allLanguages = [];
+                                for (let l in languages)
+                                    allLanguages.push(languages[l]);
+                                countryFlag = result['data'][0]['flags']['png'];
 								$('#txtWikiImg').html("<img src='"+countryFlag+"'>");
 								$('#txtCurrency').html(currencyName);
 								$('#txtLanguages').html(allLanguages.toString());
@@ -852,7 +921,8 @@ function displayMap(lat,lng)
 								$('#txtCurrencySymbol').html(currencySymbol);
 								
 								map.setView([result['data'][0]['latlng'][0],result['data'][0]['latlng'][1]],5);
-								marker = L.marker([result['data'][0]['latlng'][0],result['data'][0]['latlng'][1]]).addTo(map);
+								markerCapitalGroup = L.layerGroup().addTo(map);
+								marker = L.marker([result['data'][0]['latlng'][0],result['data'][0]['latlng'][1]], markerCapitalOptions).addTo(markerCapitalGroup);
 								map.addLayer(marker);
 								
 							},
@@ -873,36 +943,123 @@ function displayMap(lat,lng)
 		
 		});
 	});
-	
-	L.easyButton('<i class="fas fa-info"></i>', function(){
-		$('#infoModal').modal('show');
-	}, 'Country Infomation').addTo(map);
 
-	L.easyButton('<i class="fas fa-info"></i>', function(){
-		$('#wikiModal').modal('show');
-	}, 'Country Infomation').addTo(map);
-	
-	L.easyButton('<i class="fas fa-cloud-sun"></i>', function(){
-		$('#weatherModal').modal('show');
-	}, 'Weather Infomation').addTo(map);
-	
-	L.easyButton('<i class="fas fa-money-bill-wave"></i>', function(){
-		$('#currencyModal').modal('show');
-	}, 'Currency Information').addTo(map);
-	
-	L.easyButton('<i class="far fa-newspaper"></i>', function(){
-		$('#newsModal').modal('show');
-	}, 'News').addTo(map);
-	
-	L.easyButton('<i class="fas fa-virus"></i>', function(){
-		$('#covidModal').modal('show');
-	}, 'Covid Infomation').addTo(map);
+	function getTopSites(countryName) {
+        $.ajax({
+            url: "php/getTop5.php",
+            type: 'GET',
+            dataType: 'json',
+            data: {
+                country: countryName
+            },
+            success: function (result) {
+                if (result['status']['name'] == 'error') {
+                    alert(result['status']['description']);
+                    return;
+                }
 
-	L.easyButton('<i class="fa fa-calendar-alt"></i>', function(){
-		$('#holidaysModal').modal('show');
-	}, 'Holiday List').addTo(map);
+                let tBody = document.getElementById('top5sites');
+                let html = "";
+
+                let data = result['data']['results'];
+                for (let i = 0; i < 5; i++) {
+                    let place = data[i];
+                    html += `
+                    <tr class="success currencyRow">
+                    <td>
+                    <a target="_blank" href="https://www.google.com/maps?q=${place['geometry']['location']['lat']},${place['geometry']['location']['lng']}">${place['name']}</a>
+                    </td>
+                  </tr>
+                    `;
+                }
+                tBody.innerHTML = html;
+            }
+        })
+    }
+
+        // function for getting Hotels Data
+        function getHotels(countryName) {
+            $.ajax({
+                url: "php/getHotels.php",
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    country: countryName
+                },
+                success: function (result) {
+                    if (result['status']['name'] == 'error') {
+                        alert(result['status']['description']);
+                        return;
+                    }
+    
+                    let tBody = document.getElementById('hotels');
+                    let html = "";
+    
+                    let data = result['data']['results'];
+                    for (let i = 0; i < 15; i++) {
+                        let place = data[i];
+                        html += `
+                        <tr class="success currencyRow">
+                        <td>
+                        <a target="_blank" href="https://www.google.com/maps?q=${place['geometry']['location']['lat']},${place['geometry']['location']['lng']}">${place['name']}</a>
+                        </td>
+                      </tr>
+                        `;
+                    }
+                    tBody.innerHTML = html;
+                }
+            })
+        }
+
+		// easy buttons
+		var infoButton = L.easyButton('fa fa-info', function () {
+			$('#infoModal').modal('show');
+		}, 'Info');
 	
-	L.easyButton('<i class="fa fa-plane"></i>', function(){
-		$('#airportsModal').modal('show');
-	}, 'Airports List').addTo(map);
+		var wikiButton = L.easyButton('fab fa-wikipedia-w', function () {
+			$('#wikiModal').modal('show');
+		}, 'Wiki');
+	
+		var weatherButton = L.easyButton('fas fa-cloud-sun', function () {
+			$('#weatherModal').modal('show');
+		}, 'Weather');
+	
+		var currencyButton = L.easyButton('fas fa-money-bill-wave', function () {
+			$('#currencyModal').modal('show');
+		}, 'Currency');
+	
+		var newsButton = L.easyButton('far fa-newspaper', function () {
+			$('#newsModal').modal('show');
+		}, 'News');
+	
+		var top5Button = L.easyButton('fa fa-suitcase-rolling', function () {
+			$('#top5Modal').modal('show');
+		}, 'Top 5 Places to Visit');
+	
+		var hotelsButton = L.easyButton('fas fa-bed', function () {
+			$('#hotelsModal').modal('show');
+		}, 'Hotels');
+	
+		infoButton.addTo(map);
+		wikiButton.addTo(map);
+		weatherButton.addTo(map);
+		currencyButton.addTo(map);
+		newsButton.addTo(map);
+		top5Button.addTo(map);
+		hotelsButton.addTo(map);
+		
+		var buttonContainer = document.getElementById('modal-buttons');
+
+		buttonContainer.appendChild(infoButton.getContainer());
+		buttonContainer.appendChild(wikiButton.getContainer());
+		buttonContainer.appendChild(weatherButton.getContainer());
+		buttonContainer.appendChild(currencyButton.getContainer());
+		buttonContainer.appendChild(newsButton.getContainer());
+		buttonContainer.appendChild(top5Button.getContainer());
+		buttonContainer.appendChild(hotelsButton.getContainer());
+	
+	
+	
 }
+	
+	

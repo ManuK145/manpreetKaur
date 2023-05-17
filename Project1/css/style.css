@@ -15,7 +15,7 @@ body
 	left: 0;
 	right: 0;
 	z-index: 2;
-	background: #212529;
+	background: #0d6efd;
 	padding: 10px 20px;
 }
 #header h1
@@ -32,6 +32,18 @@ body
 	position: relative;
 	z-index: 1;
 	margin-top: 57px;
+	height: calc(100vh - 57px) !important;
+}
+.allModalBtns
+{
+	position: absolute;
+	bottom: 20px;
+	right: 20px;
+	z-index: 2
+}
+.allModalBtns button
+{
+	width: 40px;
 }
 .dropdownCountry
 {
