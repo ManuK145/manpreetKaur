@@ -1,9 +1,8 @@
 let map, markerCapitalGroup, markerNeighbourGroup, markerEarthquakeGroup, position, marker, geojsonFeature, border = null, covidCountry, activeCases, confirmCases, deaths;
-let geonameid, currentTemp, weatherIcon, humidity, windspeed, tempMin, tempMax;
-let population, areainsqkm, countryCodeISO2, countryCodeISO3, countryDomain, capital, countryName, countryCode, countryFlag, northPoint, southPoint, eastPoint, westPoint, continentName, currencyName, currencySymbol, currencyCode, wikipediaInfo, allLanguages = [], allHolidays = [], allHolidaysDate = [];
+let geonameid, currentTemp, currentWeather, weatherIcon, humidity, windspeed, tempMin, tempMax;
+let population, areainsqkm, countryCodeISO2, countryCodeISO3, countryDomain, capital, countryName, countryCode, countryFlag, northPoint, southPoint, eastPoint, westPoint, continentName, currencyName, currencySymbol, currencyCode, currencyConversion, wikipediaInfo, allLanguages = [], allHolidays = [], allHolidaysDate = [];
 let airportMarkers;
 let newsTitle, newsDescription, newsLink, newsKeyword, newsCategory, newsPublishDate;
-
 let iconCapitalOptions = {
 	iconUrl: 'images/capital.png',
 	iconSize: [40,40]
@@ -54,11 +53,9 @@ function getLocation() {
     x.innerHTML = "Geolocation is not supported by this browser.";
   }
 }
-
 function showPosition(position) {
 	displayMap(position.coords.latitude,position.coords.longitude);
 }
-
 getLocation();
 function polystyle(feature) {
     return {
@@ -69,7 +66,6 @@ function polystyle(feature) {
         fillOpacity: 0.2
     };
 }
-
 function displayMap(lat,lng){
 	var map = L.map('map').setView([lat,lng],5);
 	markerCapitalGroup = L.layerGroup().addTo(map);
@@ -78,7 +74,6 @@ function displayMap(lat,lng){
 	}).addTo(map);
 	marker = L.marker([lat,lng],markerCapitalOptions).addTo(markerCapitalGroup);
 	map.addLayer(marker);
-	
 	$.ajax({
 		url: "php/getCurrentCapital.php",
 		type: 'GET',
@@ -93,7 +88,6 @@ function displayMap(lat,lng){
 				return;
 			}
 			countryCode = result["data"]["sys"]["country"];
-			
 			$.ajax({
 				url: "php/getAirports.php",
 				type: 'GET',
@@ -172,6 +166,7 @@ function displayMap(lat,lng){
 						alert(result['status']['description']);
 						return;
 					}
+
 					let newsTBody = $('#newsTBody');
               		for (let i = 0; i < 3; i++) {
                     let newsData = result['data']['results'][i];
@@ -206,7 +201,6 @@ function displayMap(lat,lng){
 					console.log(textStatus, errorThrown);
 				}
 			});
-			
 			$.ajax({
 				url: "php/getCountryBorder.php",
 				type: 'GET',
@@ -267,6 +261,7 @@ function displayMap(lat,lng){
 										alert(result['status']['description']);
 										return;
 									}
+
 									let neighboursData = {
                                         "type": "FeatureCollection",
                                         "features": []
@@ -311,7 +306,6 @@ function displayMap(lat,lng){
                                     console.log('Unesco Data Error', textStatus, errorThrown);
                                 }
                             });
-
 							$.ajax({
                                 url: "php/getUnesco.php",
                                 type: 'GET',
@@ -353,7 +347,6 @@ function displayMap(lat,lng){
                                     console.log('Unesco Data Error', textStatus, errorThrown);
                                 }
                             });
-
 							$.ajax({
 								url: "php/getEarthquakes.php",
 								type: 'GET',
@@ -373,8 +366,8 @@ function displayMap(lat,lng){
                                         "type": "FeatureCollection",
                                         "features": []
                                     }
-
-                                    for (let m = 0; m < result['data']['earthquakes'].length; m++) {
+                                    
+									for (let m = 0; m < result['data']['earthquakes'].length; m++) {
                                         let earthquakePlace = {
                                             "type": "Feature",
                                             "geometry": {
@@ -414,7 +407,6 @@ function displayMap(lat,lng){
 									console.log(textStatus, errorThrown);
 								}
 							});
-										
 							$.ajax({
 								url: "php/getCapitalWeather.php",
 								type: 'GET',
@@ -434,7 +426,6 @@ function displayMap(lat,lng){
 									humidity = result['data']['main']['humidity'];
 									tempMin = result['data']['main']['temp_min'];
 									tempMax = result['data']['main']['temp_max'];
-									
 									$('#CapitalWeatherIcon').html('<img src="https://openweathermap.org/img/wn/'+weatherIcon+'@2x.png" width="24px">');
 									$('#txtCapitalWeatherTemp').html(currentTemp+"&deg;");	
 									$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");			
@@ -451,7 +442,6 @@ function displayMap(lat,lng){
 									console.log(textStatus, errorThrown);
 								}
 							});
-
 							$.ajax({
 								url: "php/getWikipediaInfo.php",
 								type: 'GET',
@@ -492,7 +482,7 @@ function displayMap(lat,lng){
 									console.log(textStatus, errorThrown);
 								}
 							});
-
+							
 							$.ajax({
 								url: "php/getCurrencyData.php",
 								type: 'GET',
@@ -535,12 +525,12 @@ function displayMap(lat,lng){
 									$('#txtIso2').html(countryCodeISO2);
 									$('#txtIso3').html(countryCodeISO3);
 									$('#txtCurrencySymbol').html(currencySymbol);
-									
 								},
 								error: function(jqXHR, textStatus, errorThrown) {
 									console.log(textStatus, errorThrown);
 								}
 							});
+
 						},
 						error: function(jqXHR, textStatus, errorThrown) {
 							console.log(textStatus, errorThrown);
@@ -575,9 +565,7 @@ function displayMap(lat,lng){
           $('#txtWiki').empty();
 		  allHolidays = [];
        	  allHolidaysDate = [];
-       
-		
-		$.ajax({
+        $.ajax({
 			url: "php/getAirports.php",
 			type: 'GET',
 			dataType: 'json',
@@ -652,7 +640,6 @@ function displayMap(lat,lng){
 					border.clearLayers();
 				geojsonFeature = result['data'];
 				border = L.geoJSON(geojsonFeature,{style: polystyle}).addTo(map);
-
 				$.ajax({
 					url: "php/getCountryInfo.php",
 					type: 'GET',
@@ -684,7 +671,6 @@ function displayMap(lat,lng){
 						$('#txtCapital').html(capital);
 						$('#txtPopulation').html(population);
 						$('#txtCurrencyCode').html(currencyCode);
-
 						$.ajax({
 							url: "php/getNeighbours.php",
 							type: 'GET',
@@ -741,7 +727,6 @@ function displayMap(lat,lng){
 								console.log('Unesco Data Error',textStatus, errorThrown);
 							}
 						});
-
 						$.ajax({
                             url: "php/getUnesco.php",
                             type: 'GET',
@@ -783,7 +768,6 @@ function displayMap(lat,lng){
                                 console.log('Unesco Data Error', textStatus, errorThrown);
                             }
                         });
-						
 						$.ajax({
 							url: "php/getEarthquakes.php",
 							type: 'GET',
@@ -863,7 +847,6 @@ function displayMap(lat,lng){
 								humidity = result1['data']['main']['humidity'];
 								tempMin = result1['data']['main']['temp_min'];
 								tempMax = result1['data']['main']['temp_max'];
-								
 								$('#CapitalWeatherIcon').html('<img src="https://openweathermap.org/img/wn/'+weatherIcon+'@2x.png" width="24px">');
 								$('#txtCapitalWeatherTemp').html(currentTemp+"&deg;");
 								$('#txtCapitalWeatherCurrent').html(currentTemp+"&deg;");			
@@ -948,7 +931,6 @@ function displayMap(lat,lng){
 								console.log(textStatus, errorThrown);
 							}
 						});
-
 						$.ajax({
 							url: "php/getCurrencyConvert.php",
 							type: 'GET',
