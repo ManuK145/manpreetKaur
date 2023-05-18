@@ -1,6 +1,6 @@
 let map, markerCapitalGroup, markerNeighbourGroup, markerEarthquakeGroup, position, marker, geojsonFeature, border = null, covidCountry, activeCases, confirmCases, deaths;
 let geonameid, currentTemp, weatherIcon, humidity, windspeed, tempMin, tempMax;
-let population, areainsqkm, countryCodeISO2, countryCodeISO3, countryDomain, capital, countryName, countryCode, countryFlag, northPoint, southPoint, eastPoint, westPoint, continentName, currencyName, currencySymbol, currencyCode, wikipediaInfo, allLanguages = [];
+let population, areainsqkm, countryCodeISO2, countryCodeISO3, countryDomain, capital, countryName, countryCode, countryFlag, northPoint, southPoint, eastPoint, westPoint, continentName, currencyName, currencySymbol, currencyCode, wikipediaInfo, allLanguages = [], allHolidays = [], allHolidaysDate = [];
 let airportMarkers;
 let newsTitle, newsDescription, newsLink, newsKeyword, newsCategory, newsPublishDate;
 
@@ -54,9 +54,11 @@ function getLocation() {
     x.innerHTML = "Geolocation is not supported by this browser.";
   }
 }
+
 function showPosition(position) {
 	displayMap(position.coords.latitude,position.coords.longitude);
 }
+
 getLocation();
 function polystyle(feature) {
     return {
@@ -204,6 +206,7 @@ function displayMap(lat,lng){
 					console.log(textStatus, errorThrown);
 				}
 			});
+			
 			$.ajax({
 				url: "php/getCountryBorder.php",
 				type: 'GET',
@@ -228,25 +231,29 @@ function displayMap(lat,lng){
 								alert(result['status']['description']);
 								return;
 							}
-							geonameid = countryData['geonameId'] !== undefined ? countryData['geonameId'] : '';
-							capital = countryData['capital'] !== undefined ? countryData['capital'] : '';
-							population = countryData['population'] !== undefined ? countryData['population'] : '';
-							areainsqkm = countryData['areaInSqKm'] !== undefined ? countryData['areaInSqKm'] : '';
-							countryName = countryData['countryName'] !== undefined ? countryData['countryName'] : '';
-							getTopSites(countryName);
-                            getHotels(countryName);
-							continentName = countryData['continentName'] !== undefined ? countryData['continentName'] : '';
-							currencyCode = countryData['currencyCode'] !== undefined ? countryData['currencyCode'] : '';
-							northPoint = countryData['north'] !== undefined ? countryData['north'] : '';
-							southPoint = countryData['south'] !== undefined ? countryData['south'] : '';
-							eastPoint = countryData['east'] !== undefined ? countryData['east'] : '';
-							westPoint = countryData['west'] !== undefined ? countryData['west'] : '';
-							$('#infoModalLabel').html(countryName);
-							$('.txtCapitalName').html(capital);
-							$('#txtAreaInSqKm').html(areainsqkm);
-							$('#txtCapital').html(capital);
-							$('#txtPopulation').html(population);
-							$('#txtCurrencyCode').html(currencyCode);
+							if (result['data'] && result['data'].length > 0) {
+                                let countryData = result['data'][0];
+							
+								geonameid = countryData['geonameId'] !== undefined ? countryData['geonameId'] : '';
+								capital = countryData['capital'] !== undefined ? countryData['capital'] : '';
+								population = countryData['population'] !== undefined ? countryData['population'] : '';
+								areainsqkm = countryData['areaInSqKm'] !== undefined ? countryData['areaInSqKm'] : '';
+								countryName = countryData['countryName'] !== undefined ? countryData['countryName'] : '';
+								getTopSites(countryName);
+                            	getHotels(countryName);
+								continentName = countryData['continentName'] !== undefined ? countryData['continentName'] : '';
+								currencyCode = countryData['currencyCode'] !== undefined ? countryData['currencyCode'] : '';
+								northPoint = countryData['north'] !== undefined ? countryData['north'] : '';
+								southPoint = countryData['south'] !== undefined ? countryData['south'] : '';
+								eastPoint = countryData['east'] !== undefined ? countryData['east'] : '';
+								westPoint = countryData['west'] !== undefined ? countryData['west'] : '';
+								$('#infoModalLabel').html(countryName);
+								$('.txtCapitalName').html(capital);
+								$('#txtAreaInSqKm').html(areainsqkm);
+								$('#txtCapital').html(capital);
+								$('#txtPopulation').html(population);
+								$('#txtCurrencyCode').html(currencyCode);
+							}
 							
 							$.ajax({
 								url: "php/getNeighbours.php",
@@ -299,6 +306,48 @@ function displayMap(lat,lng){
 
                                     markerNeighbourGroup.addLayer(marker);
                                     map.addLayer(markerNeighbourGroup);
+                                },
+                                error: function (jqXHR, textStatus, errorThrown) {
+                                    console.log('Unesco Data Error', textStatus, errorThrown);
+                                }
+                            });
+
+							$.ajax({
+                                url: "php/getUnesco.php",
+                                type: 'GET',
+                                dataType: "json",
+                                data: {
+                                    countryName: countryName
+                                },
+                                success: function (result) {
+                                    if (result['status']['name'] == 'error') {
+                                        alert(result['status']['description']);
+                                        return;
+                                    }
+                                    unescoNumber = result.data.unescoSites.nhits;
+                                    if (unescoNumber < 1) {
+                                        $('#unescoModal').modal('show');
+                                        map.addLayer(largeCityCluster);
+                                        map.addLayer(cityMarkersCluster);
+                                    }
+                                    else if (unescoNumber > 0) {
+                                        for (let i = 0; i < result.data.unescoSites.records.length; i++) {
+                                            unescoIcon = L.icon({
+                                                iconUrl: 'images/unesco.svg',
+                                                iconSize: [50, 50],
+                                                popupAnchor: [0, -15]
+                                            });
+                                            unescoSite = result.data.unescoSites.records[i].fields.site;
+                                            unescoLat = result.data.unescoSites.records[i].fields.coordinates[0];
+                                            unescoLng = result.data.unescoSites.records[i].fields.coordinates[1];
+                                            unescoThumbnail = result.data.unescoSites.records[i].fields.image_url.filename;
+                                            unsescoDescription = result.data.unescoSites.records[i].fields.short_description;
+                                            unescoUrl = `https://whc.unesco.org/en/list/${result.data.unescoSites.records[i].fields.id_number}`;
+                                            unescoMarker = L.marker(new L.LatLng(unescoLat, unescoLng), ({ icon: unescoIcon })).bindPopup(`<div class="markerContainer"><h3>${unescoSite}</h3><img class="markerThumbnail" src='https://whc.unesco.org/uploads/sites/${unescoThumbnail}'><p class="markerTxtDescription">${unsescoDescription}</p></div><div id="city-link"><a href="${unescoUrl}" target="_blank">Learn more</a></div>`, {
+                                                maxWidth: 300
+                                            });
+                                        }
+                                    };
                                 },
                                 error: function (jqXHR, textStatus, errorThrown) {
                                     console.log('Unesco Data Error', textStatus, errorThrown);
@@ -524,6 +573,8 @@ function displayMap(lat,lng){
           }
           $('#newsTBody').empty();
           $('#txtWiki').empty();
+		  allHolidays = [];
+       	  allHolidaysDate = [];
        
 		
 		$.ajax({
@@ -690,6 +741,48 @@ function displayMap(lat,lng){
 								console.log('Unesco Data Error',textStatus, errorThrown);
 							}
 						});
+
+						$.ajax({
+                            url: "php/getUnesco.php",
+                            type: 'GET',
+                            dataType: "json",
+                            data: {
+                                countryName: countryName
+                            },
+                            success: function (result) {
+                                if (result['status']['name'] == 'error') {
+                                    alert(result['status']['description']);
+                                    return;
+                                }
+                                unescoNumber = result.data.unescoSites.nhits;
+                                if (unescoNumber < 1) {
+                                    $('#unescoModal').modal('show');
+                                    map.addLayer(largeCityCluster);
+                                    map.addLayer(cityMarkersCluster);
+                                }
+                                else if (unescoNumber > 0) {
+                                    for (let i = 0; i < result.data.unescoSites.records.length; i++) {
+                                        unescoIcon = L.icon({
+                                            iconUrl: 'images/unesco.svg',
+                                            iconSize: [50, 50],
+                                            popupAnchor: [0, -15]
+                                        });
+                                        unescoSite = result.data.unescoSites.records[i].fields.site;
+                                        unescoLat = result.data.unescoSites.records[i].fields.coordinates[0];
+                                        unescoLng = result.data.unescoSites.records[i].fields.coordinates[1];
+                                        unescoThumbnail = result.data.unescoSites.records[i].fields.image_url.filename;
+                                        unsescoDescription = result.data.unescoSites.records[i].fields.short_description;
+                                        unescoUrl = `https://whc.unesco.org/en/list/${result.data.unescoSites.records[i].fields.id_number}`;
+                                        unescoMarker = L.marker(new L.LatLng(unescoLat, unescoLng), ({ icon: unescoIcon })).bindPopup(`<div class="markerContainer"><h3>${unescoSite}</h3><img class="markerThumbnail" src='https://whc.unesco.org/uploads/sites/${unescoThumbnail}'><p class="markerTxtDescription">${unsescoDescription}</p></div><div id="city-link"><a href="${unescoUrl}" target="_blank">Learn more</a></div>`, {
+                                            maxWidth: 300
+                                        });
+                                    }
+                                };
+                            },
+                            error: function (jqXHR, textStatus, errorThrown) {
+                                console.log('Unesco Data Error', textStatus, errorThrown);
+                            }
+                        });
 						
 						$.ajax({
 							url: "php/getEarthquakes.php",
